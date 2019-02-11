@@ -15,6 +15,7 @@ from api_client.utils.typing import OptionalDict
 
 LOG = logging.getLogger(__name__)
 
+
 class BaseClient:
 
     def __init__(

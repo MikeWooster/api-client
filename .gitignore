@@ -1,5 +1,8 @@
 .coverage
 htmlcov/
 *.egg-info
+*.pyc
+*__pycache__
 examples/
-
+build/
+dist/

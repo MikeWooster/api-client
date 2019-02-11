@@ -16,17 +16,25 @@ pip install api_client
 
 ```
 from api_client import BaseClient
+from api_client.endpoint import endpoint
+
+
+# Define endpoints, using the provided decorator.
+@endpoint
+class Endpoint:
+    base_url = "https://jsonplaceholder.typicode.com"
+    todos = "todos"
+    todo = "todos/{id}"
+
 
 # Extend the client for your API integration.
 class JSONPlaceholderClient(BaseClient):
-    base_url = "https://jsonplaceholder.typicode.com"
 
     def get_all_todos(self) -> dict:
-        url = f"{self.base_url}/todos"
-        return self.read(url)
+        return self.read(Endpoint.todos)
 
     def get_todo(self, todo_id: int) -> dict:
-        url = f"{self.base_url}/todos/{todo_id}"
+        url = Endpoint.todo.format(id=todo_id)
         return self.read(url)
 
 
@@ -226,3 +234,25 @@ All exceptions raised as part of the api_client inherit from `ClientError`.
    An unexpected error occurred when using the client.  This will most likely
    be the result of another exception being raised.  If possible, the original
    exception will be indicated as the causing exception of this error.
+
+
+#### Endpoints
+
+The api_client also provides a convenient way of defining url endpoints with
+use of the `@endpoint` decorator.  In order to decorate a class with `@endpoint`
+the decorated class must define a `base_url` attribute along with the required
+resources.  The decorator will combine the base_url with the resource.
+
+Example:
+
+```
+from api_client.decorates import endpoint
+
+@endpoint
+class Endpoint:
+    base_url = "http://foo.com"
+    resource = "search"
+
+>>> Endpoint.resource
+"http://foo.com/search
+```
