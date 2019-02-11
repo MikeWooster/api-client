@@ -188,7 +188,13 @@ client = ClientImplementation(
 * `JsonResponseHandler`
 
    Handler that parses the response data to `json` and returns the dictionary.
-   If an error occurs trying to parse to json then an `ClientUnexpectedError`
+   If an error occurs trying to parse to json then a `ClientUnexpectedError`
+   will be raised.
+
+* `XmlResponseHandler`
+
+   Handler that parses the response data to an `xml.etree.ElementTree.Element`.
+   If an error occurs trying to parse to xml then a `ClientUnexpectedError`
    will be raised.
 
 #### Request Formatters

@@ -1,5 +1,6 @@
 import logging
 from json import JSONDecodeError
+from xml.etree import ElementTree
 
 from requests import Response
 
@@ -36,3 +37,16 @@ class JsonResponseHandler(BaseResponseHandler):
             LOG.error("Unable to decode response data to json. data=%s", response.text)
             raise ClientUnexpectedError(f"Unable to decode response data to json. data='{response.text}'") from error
         return response_json
+
+
+class XmlResponseHandler(BaseResponseHandler):
+    """Attempt to return the decoded response to an xml Element."""
+
+    @staticmethod
+    def get_request_data(response: Response) -> ElementTree.Element:
+        try:
+            xml_element = ElementTree.fromstring(response.text)
+        except ElementTree.ParseError as error:
+            LOG.error("Unable to parse response data to xml. data=%s", response.text)
+            raise ClientUnexpectedError(f"Unable to parse response data to xml. data='{response.text}'") from error
+        return xml_element

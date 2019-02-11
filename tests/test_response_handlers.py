@@ -1,12 +1,16 @@
 import json
 from io import BytesIO
 from unittest.mock import sentinel
+from xml.etree import ElementTree
 
 import pytest
 from requests import Response
 
 from api_client.exceptions import ClientUnexpectedError
-from api_client.response_handlers import RequestsResponseHandler, JsonResponseHandler, BaseResponseHandler
+from api_client.response_handlers import (
+    RequestsResponseHandler, JsonResponseHandler, BaseResponseHandler,
+    XmlResponseHandler,
+)
 
 
 def build_response(data) -> Response:
@@ -54,3 +58,21 @@ class TestJsonResponseHandler:
         with pytest.raises(ClientUnexpectedError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to decode response data to json. data='foo'"
+
+
+class TestXmlResponseHandler:
+    handler = XmlResponseHandler
+
+    def test_response_data_is_parsed_correctly(self):
+        response = build_response(data='<?xml version="1.0"?><xml><title>Test Title</title></xml>')
+        data = self.handler.get_request_data(response)
+        assert isinstance(data, ElementTree.Element)
+        assert data.tag == "xml"
+        assert data[0].tag == "title"
+        assert data[0].text == "Test Title"
+
+    def test_bad_xml_raises_unexpected_error(self):
+        response = build_response(data="foo")
+        with pytest.raises(ClientUnexpectedError) as exc_info:
+            self.handler.get_request_data(response)
+        assert str(exc_info.value) == "Unable to parse response data to xml. data='foo'"
