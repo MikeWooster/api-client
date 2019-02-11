@@ -35,7 +35,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     author='Mike Wooster',
     author_email='',
-    url='',
+    url='https://github.com/MikeWooster/api-client',
     python_requires='>=3.6',
     packages=[
         'api_client',
