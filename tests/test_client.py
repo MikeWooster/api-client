@@ -206,11 +206,12 @@ def test_server_error_raises_and_logs_client_server_error(client_method, client_
         mock_requests_method.return_value.status_code = 500
         mock_requests_method.return_value.url = sentinel.url
         mock_requests_method.return_value.reason = "A TEST server error occurred"
+        mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
         with pytest.raises(ClientServerError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "500 Error: A TEST server error occurred for url: sentinel.url"
-    assert "500 Error: A TEST server error occurred for url: sentinel.url" in caplog.messages
+    assert "500 Error: A TEST server error occurred for url: sentinel.url. data={'foo': 'bar'}" in caplog.messages
 
 
 @pytest.mark.parametrize("client_method,client_args,patch_methodname",[
@@ -226,11 +227,12 @@ def test_not_modified_response_raises_and_logs_client_redirection_error(client_m
         mock_requests_method.return_value.status_code = 304
         mock_requests_method.return_value.url = sentinel.url
         mock_requests_method.return_value.reason = "A TEST redirection error occurred"
+        mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
         with pytest.raises(ClientRedirectionError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "304 Error: A TEST redirection error occurred for url: sentinel.url"
-    assert "304 Error: A TEST redirection error occurred for url: sentinel.url" in caplog.messages
+    assert "304 Error: A TEST redirection error occurred for url: sentinel.url. data={'foo': 'bar'}" in caplog.messages
 
 @pytest.mark.parametrize("client_method,client_args,patch_methodname",[
     (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
@@ -245,11 +247,12 @@ def test_not_found_response_raises_and_logs_client_bad_request_error(client_meth
         mock_requests_method.return_value.status_code = 404
         mock_requests_method.return_value.url = sentinel.url
         mock_requests_method.return_value.reason = "A TEST not found error occurred"
+        mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
         with pytest.raises(ClientBadRequestError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "404 Error: A TEST not found error occurred for url: sentinel.url"
-    assert "404 Error: A TEST not found error occurred for url: sentinel.url" in caplog.messages
+    assert "404 Error: A TEST not found error occurred for url: sentinel.url. data={'foo': 'bar'}" in caplog.messages
 
 
 @pytest.mark.parametrize("client_method,client_args,patch_methodname",[
@@ -265,11 +268,16 @@ def test_unexpected_status_code_response_raises_and_logs_unexpected_error(client
         mock_requests_method.return_value.status_code = 100
         mock_requests_method.return_value.url = sentinel.url
         mock_requests_method.return_value.reason = "A TEST bad status code error occurred"
+        mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
         with pytest.raises(ClientUnexpectedError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "100 Error: A TEST bad status code error occurred for url: sentinel.url"
-    assert "100 Error: A TEST bad status code error occurred for url: sentinel.url" in caplog.messages
+    expected_log_message = (
+        "100 Error: A TEST bad status code error occurred for url: sentinel.url. "
+        "data={'foo': 'bar'}"
+    )
+    assert expected_log_message in caplog.messages
 
 
 @pytest.mark.parametrize("client_method,client_args,patch_methodname",[

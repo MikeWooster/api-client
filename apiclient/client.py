@@ -151,5 +151,5 @@ class BaseClient:
             exception_class = ClientServerError
         else:
             exception_class = ClientUnexpectedError
-        logger("%s Error: %s for url: %s", response.status_code, response.reason, response.url)
+        logger("%s Error: %s for url: %s. data=%s", response.status_code, response.reason, response.url, response.text)
         raise exception_class(f"{response.status_code} Error: {response.reason} for url: {response.url}")
