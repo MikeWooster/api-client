@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from api_client.request_formatters import BaseRequestFormatter, JsonRequestFormatter
+from apiclient.request_formatters import BaseRequestFormatter, JsonRequestFormatter
 
 
 class RequestFormatter(BaseRequestFormatter):

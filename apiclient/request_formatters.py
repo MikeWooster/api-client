@@ -1,6 +1,6 @@
 import json
 
-from api_client.utils.typing import OptionalDict, OptionalStr
+from apiclient.utils.typing import OptionalDict, OptionalStr
 
 
 class BaseRequestFormatter:

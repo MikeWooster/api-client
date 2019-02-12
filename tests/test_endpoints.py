@@ -1,6 +1,6 @@
 import pytest
 
-from api_client.decorates import endpoint
+from apiclient.decorates import endpoint
 
 
 @endpoint

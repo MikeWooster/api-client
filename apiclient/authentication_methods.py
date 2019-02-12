@@ -1,6 +1,6 @@
 from typing import Optional
 
-from api_client.utils.typing import BasicAuthType
+from apiclient.utils.typing import BasicAuthType
 
 
 class BaseAuthenticationMethod:

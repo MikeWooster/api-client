@@ -1,7 +1,7 @@
-from api_client.authentication_methods import NoAuthentication, QueryParameterAuthentication, HeaderAuthentication, BasicAuthentication
-from api_client.client import BaseClient
-from api_client.request_formatters import BaseRequestFormatter
-from api_client.response_handlers import BaseResponseHandler
+from apiclient.authentication_methods import NoAuthentication, QueryParameterAuthentication, HeaderAuthentication, BasicAuthentication
+from apiclient.client import BaseClient
+from apiclient.request_formatters import BaseRequestFormatter
+from apiclient.response_handlers import BaseResponseHandler
 
 
 def test_no_authentication_method_does_not_alter_client():

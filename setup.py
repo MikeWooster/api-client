@@ -29,7 +29,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='api-client',
-    version='0.1.1',
+    version='0.1.2',
     description='Separate the high level client implementation from the underlying CRUD operations.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -38,7 +38,7 @@ setuptools.setup(
     url='https://github.com/MikeWooster/api-client',
     python_requires='>=3.6',
     packages=[
-        'api_client',
+        'apiclient',
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

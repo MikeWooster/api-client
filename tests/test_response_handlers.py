@@ -6,8 +6,8 @@ from xml.etree import ElementTree
 import pytest
 from requests import Response
 
-from api_client.exceptions import ClientUnexpectedError
-from api_client.response_handlers import (
+from apiclient.exceptions import ClientUnexpectedError
+from apiclient.response_handlers import (
     RequestsResponseHandler, JsonResponseHandler, BaseResponseHandler,
     XmlResponseHandler,
 )

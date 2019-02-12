@@ -4,7 +4,7 @@ from xml.etree import ElementTree
 
 from requests import Response
 
-from api_client.exceptions import ClientUnexpectedError
+from apiclient.exceptions import ClientUnexpectedError
 
 
 LOG = logging.getLogger(__name__)

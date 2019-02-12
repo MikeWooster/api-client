@@ -4,13 +4,13 @@ from typing import Callable, Optional, Type
 import requests
 from requests import Response
 
-from api_client.authentication_methods import BaseAuthenticationMethod
-from api_client.exceptions import (
+from apiclient.authentication_methods import BaseAuthenticationMethod
+from apiclient.exceptions import (
     ClientBadRequestError, ClientRedirectionError, ClientServerError, ClientUnexpectedError,
 )
-from api_client.request_formatters import BaseRequestFormatter
-from api_client.response_handlers import BaseResponseHandler
-from api_client.utils.typing import OptionalDict
+from apiclient.request_formatters import BaseRequestFormatter
+from apiclient.response_handlers import BaseResponseHandler
+from apiclient.utils.typing import OptionalDict
 
 
 LOG = logging.getLogger(__name__)

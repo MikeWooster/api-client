@@ -15,8 +15,8 @@ pip install api-client
 ## Usage
 
 ```
-from api_client import BaseClient
-from api_client.endpoint import endpoint
+from apiclient import BaseClient
+from apiclient.decorates import endpoint
 
 
 # Define endpoints, using the provided decorator.
@@ -97,7 +97,7 @@ client with various authentication schemes through dependency injection,
 meaning you can change the behaviour of the client without changing the
 underlying implementation.
 
-The api_client supports the following authentication methods, by specifying
+The apiclient supports the following authentication methods, by specifying
 the initialized class on initialization of the client, as follows:
 ```
 client = ClientImplementation(
@@ -169,7 +169,7 @@ following a successful request to the API.  These must inherit from
 `BaseResponseHandler` and implement the `get_request_data()` method which
 will take the `requests.Response` object and parse the data accordingly.
 
-The api_client supports the following response handlers, by specifying
+The apiclient supports the following response handlers, by specifying
 the class on initialization of the client as follows:
 
 ```
@@ -206,7 +206,7 @@ These must inherit from `BaseRequestFormatter` and implement the `format()`
 method which will take the outgoing `data` object and format accordingly
 before making the request.
 
-The api_client supports the following request formatters, by specifying
+The apiclient supports the following request formatters, by specifying
 the class on initialization of the client as follows:
 
 ```
@@ -225,7 +225,7 @@ client = ClientImplementation(
 
 #### Exceptions
 
-All exceptions raised as part of the api_client inherit from `ClientError`.
+All exceptions raised as part of the apiclient inherit from `ClientError`.
 
 * `ClientBadRequestError`
    The client was used incorrectly for contacting the API. This is due
@@ -244,7 +244,7 @@ All exceptions raised as part of the api_client inherit from `ClientError`.
 
 #### Endpoints
 
-The api_client also provides a convenient way of defining url endpoints with
+The apiclient also provides a convenient way of defining url endpoints with
 use of the `@endpoint` decorator.  In order to decorate a class with `@endpoint`
 the decorated class must define a `base_url` attribute along with the required
 resources.  The decorator will combine the base_url with the resource.
@@ -252,7 +252,7 @@ resources.  The decorator will combine the base_url with the resource.
 Example:
 
 ```
-from api_client.decorates import endpoint
+from apiclient.decorates import endpoint
 
 @endpoint
 class Endpoint:
