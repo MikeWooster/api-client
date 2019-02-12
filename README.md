@@ -9,7 +9,7 @@ implementation, rather than the design of the client itself.
 ## Installation
 
 ```
-pip install api_client
+pip install api-client
 ```
 
 ## Usage

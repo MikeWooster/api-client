@@ -28,8 +28,8 @@ with open("README.md", "r") as fh:
 
 
 setuptools.setup(
-    name='api_client',
-    version='0.1.0',
+    name='api-client',
+    version='0.1.1',
     description='Separate the high level client implementation from the underlying CRUD operations.',
     long_description=long_description,
     long_description_content_type='text/markdown',
