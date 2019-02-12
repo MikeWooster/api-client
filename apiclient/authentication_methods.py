@@ -1,6 +1,6 @@
 from typing import Optional
 
-from apiclient.utils.typing import BasicAuthType
+from apiclient.utils.typing import BasicAuthType, OptionalStr
 
 
 class BaseAuthenticationMethod:
@@ -59,13 +59,16 @@ class HeaderAuthentication(BaseAuthenticationMethod):
     "Authorization: Bearer <token>"
     """
 
-    def __init__(self, token: str, parameter: str = "Authorization", realm: str = "Bearer"):
+    def __init__(self, token: str, parameter: str = "Authorization", realm: OptionalStr = "Bearer"):
         self._token = token
         self._parameter = parameter
         self._realm = realm
 
     def get_authentication_headers(self):
-        return {self._parameter: f"{self._realm} {self._token}"}
+        if self._realm:
+            return {self._parameter: f"{self._realm} {self._token}"}
+        else:
+            return {self._parameter: self._token}
 
 
 class BasicAuthentication(BaseAuthenticationMethod):

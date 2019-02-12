@@ -135,9 +135,8 @@ client = ClientImplementation(
    the outgoing request.  Usage is as follows:
    ```
    authentication_method=HeaderAuthentication(token="secret_value")
-   ```
-   The default header will be constructed using this information as follows:
-   ```
+
+   # Constructs request header:
    {"Authorization": "Bearer secret_value"}
    ```
    The `Authorization` parameter and `Bearer` realm can be adjusted by
@@ -148,10 +147,23 @@ client = ClientImplementation(
        parameter="Foo",
        realm="Bar",
    )
-   ```
-   Which will construct the following header:
-   ```
+
+   # Constructs request header:
    {"Foo": "Bar secret_value"}
+   ```
+
+   Or alternatively, when APIs do not require a realm to be set, you can
+   specify it as a value that evaluates to False to remove the realm from
+   the header:
+   ```
+   authentication_method=HeaderAuthentication(
+       token="secret_value"
+       parameter="Foo",
+       realm=None,
+   )
+
+   # Constructs request header:
+   {"Foo": "secret_value"}
    ```
 
 * `BasicAuthentication`
