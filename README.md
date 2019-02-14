@@ -88,10 +88,7 @@ ClientBadRequestError: 404 Error: Not Found for url: https://jsonplaceholder.typ
 
 ```
 
-
-### More about...
-
-#### Authentication Methods
+## Authentication Methods
 Authentication methods provide a way in which you can customize the
 client with various authentication schemes through dependency injection,
 meaning you can change the behaviour of the client without changing the
@@ -107,74 +104,70 @@ client = ClientImplementation(
 )
 ```
 
-* `NoAuthentication`
+### `NoAuthentication`
+This authentication method simply does not add anything to the client,
+allowing the api to contact APIs that do not enforce any authentication.
 
-   This authentication method simply does not add anything to the client,
-   allowing the api to contact APIs that do not enforce any authentication.
+### `QueryParameterAuthentication`
+This authentication method adds the relevant parameter and token to the
+client query parameters.  Usage is as follows:
 
-* `QueryParameterAuthentication`
+```
+authentication_method=QueryParameterAuthentication(parameter="apikey", token="secret_token"),
+```
+Example. Contacting a url with the following data
+```
+http://api.example.com/users?age=27
+```
+Will add the authentication parameters to the outgoing request:
+```
+http://api.example.com/users?age=27&apikey=secret_token
+```
 
-   This authentication method adds the relevant parameter and token to the
-   client query parameters.  Usage is as follows:
+### `HeaderAuthentication`
+This authentication method adds the relevant authorization header to
+the outgoing request.  Usage is as follows:
+```
+authentication_method=HeaderAuthentication(token="secret_value")
 
-   ```
-   authentication_method=QueryParameterAuthentication(parameter="apikey", token="secret_token"),
-   ```
-   Example. Contacting a url with the following data
-   ```
-   http://api.example.com/users?age=27
-   ```
-   Will add the authentication parameters to the outgoing request:
-   ```
-   http://api.example.com/users?age=27&apikey=secret_token
-   ```
+# Constructs request header:
+{"Authorization": "Bearer secret_value"}
+```
+The `Authorization` parameter and `Bearer` realm can be adjusted by
+specifying on method initialization.
+```
+authentication_method=HeaderAuthentication(
+   token="secret_value"
+   parameter="Foo",
+   realm="Bar",
+)
 
-* `HeaderAuthentication`
+# Constructs request header:
+{"Foo": "Bar secret_value"}
+```
 
-   This authentication method adds the relevant authorization header to
-   the outgoing request.  Usage is as follows:
-   ```
-   authentication_method=HeaderAuthentication(token="secret_value")
+Or alternatively, when APIs do not require a realm to be set, you can
+specify it as a value that evaluates to False to remove the realm from
+the header:
+```
+authentication_method=HeaderAuthentication(
+   token="secret_value"
+   parameter="Foo",
+   realm=None,
+)
 
-   # Constructs request header:
-   {"Authorization": "Bearer secret_value"}
-   ```
-   The `Authorization` parameter and `Bearer` realm can be adjusted by
-   specifying on method initialization.
-   ```
-   authentication_method=HeaderAuthentication(
-       token="secret_value"
-       parameter="Foo",
-       realm="Bar",
-   )
+# Constructs request header:
+{"Foo": "secret_value"}
+```
 
-   # Constructs request header:
-   {"Foo": "Bar secret_value"}
-   ```
+### `BasicAuthentication`
+This authentication method enables specifying a username and password to APIs
+that require such.
+```
+authentication_method=BasicAuthentication(username="foo", password="secret_value")
+```
 
-   Or alternatively, when APIs do not require a realm to be set, you can
-   specify it as a value that evaluates to False to remove the realm from
-   the header:
-   ```
-   authentication_method=HeaderAuthentication(
-       token="secret_value"
-       parameter="Foo",
-       realm=None,
-   )
-
-   # Constructs request header:
-   {"Foo": "secret_value"}
-   ```
-
-* `BasicAuthentication`
-
-   This authentication method enables specifying a username and password to APIs
-   that require such.
-   ```
-   authentication_method=BasicAuthentication(username="foo", password="secret_value")
-   ```
-
-#### Response Handlers
+## Response Handlers
 
 Response handlers provide a standard way of handling the final response
 following a successful request to the API.  These must inherit from
@@ -192,24 +185,21 @@ client = ClientImplementation(
 )
 ```
 
-* `RequestsResponseHandler`
+### `RequestsResponseHandler`
+Handler that simply returns the original `Response` object with no
+alteration.
 
-   Handler that simply returns the original `Response` object with no
-   alteration.
+### `JsonResponseHandler`
+Handler that parses the response data to `json` and returns the dictionary.
+If an error occurs trying to parse to json then a `ClientUnexpectedError`
+will be raised.
 
-* `JsonResponseHandler`
+### `XmlResponseHandler`
+Handler that parses the response data to an `xml.etree.ElementTree.Element`.
+If an error occurs trying to parse to xml then a `ClientUnexpectedError`
+will be raised.
 
-   Handler that parses the response data to `json` and returns the dictionary.
-   If an error occurs trying to parse to json then a `ClientUnexpectedError`
-   will be raised.
-
-* `XmlResponseHandler`
-
-   Handler that parses the response data to an `xml.etree.ElementTree.Element`.
-   If an error occurs trying to parse to xml then a `ClientUnexpectedError`
-   will be raised.
-
-#### Request Formatters
+## Request Formatters
 
 Request formatters provide a way in which the outgoing request data can
 be encoded before being sent, and to set the headers appropriately.
@@ -229,32 +219,35 @@ client = ClientImplementation(
 )
 ```
 
-* `JsonRequestFormatter`
+### `JsonRequestFormatter`
 
-   Formatter that converts the data into a json format and adds the
-   `application/json` Content-type header to the outoing requests.
+Formatter that converts the data into a json format and adds the
+`application/json` Content-type header to the outoing requests.
 
 
-#### Exceptions
+## Exceptions
 
 All exceptions raised as part of the apiclient inherit from `ClientError`.
 
-* `ClientBadRequestError`
-   The client was used incorrectly for contacting the API. This is due
-   primarily to user input by passing invalid data to the API.
-* `ClientRedirectionError`
-   A redirection status code was returned as a final code when making the
-   request. This means that no data can be returned to the client as we could
-   not find the requested resource as it had moved.
-* `ClientServerError`
-   The API was unreachable when making the request.
-* `ClientUnexpectedError`
-   An unexpected error occurred when using the client.  This will most likely
-   be the result of another exception being raised.  If possible, the original
-   exception will be indicated as the causing exception of this error.
+### `ClientBadRequestError`
+The client was used incorrectly for contacting the API. This is due
+primarily to user input by passing invalid data to the API.
+
+### `ClientRedirectionError`
+A redirection status code was returned as a final code when making the
+request. This means that no data can be returned to the client as we could
+not find the requested resource as it had moved.
+
+### `ClientServerError`
+The API was unreachable when making the request.
+
+### `ClientUnexpectedError`
+An unexpected error occurred when using the client.  This will most likely
+be the result of another exception being raised.  If possible, the original
+exception will be indicated as the causing exception of this error.
 
 
-#### Endpoints
+## Endpoints
 
 The apiclient also provides a convenient way of defining url endpoints with
 use of the `@endpoint` decorator.  In order to decorate a class with `@endpoint`
