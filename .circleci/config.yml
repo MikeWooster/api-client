@@ -1,0 +1,64 @@
+version: 2
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-36
+      - test-37
+jobs:
+  test-36:
+    docker:
+      - image: circleci/python:3.6.7
+    steps:
+      - checkout
+      - run:
+          name: create virtual environment
+          command: |
+            python -m venv venv
+      - run:
+          name: install tox
+          command: |
+            . venv/bin/activate
+            pip install --upgrade pip wheel setuptools
+            pip install tox
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            tox -e py36-requests216
+            tox -e py36-requests217
+            tox -e py36-requests218
+            tox -e py36-requests219
+            tox -e py36-requests220
+            tox -e py36-requests221
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+  test-37:
+    docker:
+      - image: circleci/python:3.7.2
+    steps:
+      - checkout
+      - run:
+          name: create virtual environment
+          command: |
+            python -m venv venv
+      - run:
+          name: install tox
+          command: |
+            . venv/bin/activate
+            pip install --upgrade pip wheel setuptools
+            pip install tox
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            tox -e py37-requests216
+            tox -e py37-requests217
+            tox -e py37-requests218
+            tox -e py37-requests219
+            tox -e py37-requests220
+            tox -e py37-requests221
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
