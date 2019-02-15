@@ -1,12 +1,13 @@
-
 # This defines the base url in the endpoint and must be present.
 BASE_URL_RESERVED_NAME = "base_url"
 
 
 def endpoint(cls=None):
     """Decorator for automatically constructing urls from a base_url and defined resources."""
+
     def wrap(cls):
         return _process_class(cls)
+
     if cls is None:
         # Decorator is called as @endpoint with parens.
         return wrap

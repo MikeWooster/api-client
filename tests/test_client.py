@@ -4,9 +4,13 @@ from unittest.mock import Mock, patch, sentinel
 import pytest
 
 from apiclient.authentication_methods import NoAuthentication
-from apiclient.client import BaseClient, LOG as client_logger
+from apiclient.client import LOG as client_logger
+from apiclient.client import BaseClient
 from apiclient.exceptions import (
-    ClientBadRequestError, ClientRedirectionError, ClientServerError, ClientUnexpectedError,
+    ClientBadRequestError,
+    ClientRedirectionError,
+    ClientServerError,
+    ClientUnexpectedError,
 )
 from apiclient.request_formatters import BaseRequestFormatter, JsonRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler, JsonResponseHandler
@@ -66,7 +70,8 @@ def test_client_initialization_with_invalid_authentication_method():
             response_handler=MockResponseHandler,
             request_formatter=MockRequestFormatter,
         )
-    assert str(exc_info.value) == "provided authentication_method must be an instance of BaseAuthenticationMethod."
+    expected_message = "provided authentication_method must be an instance of BaseAuthenticationMethod."
+    assert str(exc_info.value) == expected_message
 
 
 def test_client_initialization_with_invalid_response_handler():
@@ -123,7 +128,7 @@ def test_set_and_get_default_username_password_authentication():
         response_handler=MockResponseHandler,
         request_formatter=MockRequestFormatter,
     )
-    assert client.get_default_username_password_authentication() == None
+    assert client.get_default_username_password_authentication() is None
     client.set_default_username_password_authentication(("username", "password"))
     assert client.get_default_username_password_authentication() == ("username", "password")
     # Setting the default username password should overwrite the original
@@ -136,7 +141,7 @@ def test_create_method_success(mock_requests):
     mock_requests.post.return_value.status_code = 201
     client.create(sentinel.url, data={"foo": "bar"})
     mock_requests.post.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, data={'foo': 'bar'}, params={}
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}
     )
 
 
@@ -144,9 +149,7 @@ def test_create_method_success(mock_requests):
 def test_read_method_success(mock_requests):
     mock_requests.get.return_value.status_code = 200
     client.read(sentinel.url)
-    mock_requests.get.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, params={}, data=None
-    )
+    mock_requests.get.assert_called_once_with(sentinel.url, auth=None, headers={}, params={}, data=None)
 
 
 @patch("apiclient.client.requests")
@@ -154,7 +157,7 @@ def test_replace_method_success(mock_requests):
     mock_requests.put.return_value.status_code = 200
     client.replace(sentinel.url, data={"foo": "bar"})
     mock_requests.put.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, data={'foo': 'bar'}, params={}
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}
     )
 
 
@@ -163,7 +166,7 @@ def test_update_method_success(mock_requests):
     mock_requests.patch.return_value.status_code = 200
     client.update(sentinel.url, data={"foo": "bar"})
     mock_requests.patch.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, data={'foo': 'bar'}, params={}
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}
     )
 
 
@@ -171,19 +174,22 @@ def test_update_method_success(mock_requests):
 def test_delete_method_success(mock_requests):
     mock_requests.delete.return_value.status_code = 200
     client.delete(sentinel.url)
-    mock_requests.delete.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, params={}, data=None
-    )
+    mock_requests.delete.assert_called_once_with(sentinel.url, auth=None, headers={}, params={}, data=None)
 
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname",[
-    (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
-def test_make_request_error_raises_and_logs_unexpected_error(client_method, client_args, patch_methodname, caplog):
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
+def test_make_request_error_raises_and_logs_unexpected_error(
+    client_method, client_args, patch_methodname, caplog
+):
     caplog.set_level(level=logging.ERROR, logger=client_logger.name)
     with patch(patch_methodname) as mock_requests_method:
         mock_requests_method.side_effect = (ValueError("Error raised for testing"),)
@@ -193,14 +199,19 @@ def test_make_request_error_raises_and_logs_unexpected_error(client_method, clie
     assert "An error occurred when contacting sentinel.url" in caplog.messages
 
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname",[
-    (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
-def test_server_error_raises_and_logs_client_server_error(client_method, client_args, patch_methodname, caplog):
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
+def test_server_error_raises_and_logs_client_server_error(
+    client_method, client_args, patch_methodname, caplog
+):
     caplog.set_level(level=logging.WARNING, logger=client_logger.name)
     with patch(patch_methodname) as mock_requests_method:
         mock_requests_method.return_value.status_code = 500
@@ -211,17 +222,25 @@ def test_server_error_raises_and_logs_client_server_error(client_method, client_
         with pytest.raises(ClientServerError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "500 Error: A TEST server error occurred for url: sentinel.url"
-    assert "500 Error: A TEST server error occurred for url: sentinel.url. data={'foo': 'bar'}" in caplog.messages
+    assert (
+        "500 Error: A TEST server error occurred for url: sentinel.url. data={'foo': 'bar'}"
+        in caplog.messages
+    )
 
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname",[
-    (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
-def test_not_modified_response_raises_and_logs_client_redirection_error(client_method, client_args, patch_methodname, caplog):
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
+def test_not_modified_response_raises_and_logs_client_redirection_error(
+    client_method, client_args, patch_methodname, caplog
+):
     caplog.set_level(level=logging.ERROR, logger=client_logger.name)
     with patch(patch_methodname) as mock_requests_method:
         mock_requests_method.return_value.status_code = 304
@@ -232,16 +251,25 @@ def test_not_modified_response_raises_and_logs_client_redirection_error(client_m
         with pytest.raises(ClientRedirectionError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "304 Error: A TEST redirection error occurred for url: sentinel.url"
-    assert "304 Error: A TEST redirection error occurred for url: sentinel.url. data={'foo': 'bar'}" in caplog.messages
+    assert (
+        "304 Error: A TEST redirection error occurred for url: sentinel.url. data={'foo': 'bar'}"
+        in caplog.messages
+    )
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname",[
-    (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
-def test_not_found_response_raises_and_logs_client_bad_request_error(client_method, client_args, patch_methodname, caplog):
+
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
+def test_not_found_response_raises_and_logs_client_bad_request_error(
+    client_method, client_args, patch_methodname, caplog
+):
     caplog.set_level(level=logging.ERROR, logger=client_logger.name)
     with patch(patch_methodname) as mock_requests_method:
         mock_requests_method.return_value.status_code = 404
@@ -252,17 +280,25 @@ def test_not_found_response_raises_and_logs_client_bad_request_error(client_meth
         with pytest.raises(ClientBadRequestError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "404 Error: A TEST not found error occurred for url: sentinel.url"
-    assert "404 Error: A TEST not found error occurred for url: sentinel.url. data={'foo': 'bar'}" in caplog.messages
+    assert (
+        "404 Error: A TEST not found error occurred for url: sentinel.url. data={'foo': 'bar'}"
+        in caplog.messages
+    )
 
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname",[
-    (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
-def test_unexpected_status_code_response_raises_and_logs_unexpected_error(client_method, client_args, patch_methodname, caplog):
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
+def test_unexpected_status_code_response_raises_and_logs_unexpected_error(
+    client_method, client_args, patch_methodname, caplog
+):
     caplog.set_level(level=logging.ERROR, logger=client_logger.name)
     with patch(patch_methodname) as mock_requests_method:
         mock_requests_method.return_value.status_code = 100
@@ -274,18 +310,20 @@ def test_unexpected_status_code_response_raises_and_logs_unexpected_error(client
             client_method(*client_args)
     assert str(exc_info.value) == "100 Error: A TEST bad status code error occurred for url: sentinel.url"
     expected_log_message = (
-        "100 Error: A TEST bad status code error occurred for url: sentinel.url. "
-        "data={'foo': 'bar'}"
+        "100 Error: A TEST bad status code error occurred for url: sentinel.url. " "data={'foo': 'bar'}"
     )
     assert expected_log_message in caplog.messages
 
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname",[
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
 def test_query_params_are_updated_and_not_overwritten(client_method, client_args, patch_methodname):
     # Params are not expected on POST endpoints, so this method is not placed under test.
     with patch(patch_methodname) as mock_requests_method:
@@ -299,13 +337,16 @@ def test_query_params_are_updated_and_not_overwritten(client_method, client_args
     assert kwargs["params"]["New"] == "Header"
 
 
-@pytest.mark.parametrize("client_method,client_args,patch_methodname", [
-    (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-    (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-    (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-    (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-    (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
-])
+@pytest.mark.parametrize(
+    "client_method,client_args,patch_methodname",
+    [
+        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
+        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
+        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
+        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
+        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+    ],
+)
 def test_delegates_to_response_handler(client_method, client_args, patch_methodname):
     mock_response_handler_call.reset_mock()
 
@@ -318,11 +359,14 @@ def test_delegates_to_response_handler(client_method, client_args, patch_methodn
     mock_response_handler_call.assert_called_once_with(requests_response)
 
 
-@pytest.mark.parametrize("client_method,url,patch_methodname", [
-    (client.create, sentinel.url, "apiclient.client.requests.post"),
-    (client.replace, sentinel.url, "apiclient.client.requests.put"),
-    (client.update, sentinel.url, "apiclient.client.requests.patch"),
-])
+@pytest.mark.parametrize(
+    "client_method,url,patch_methodname",
+    [
+        (client.create, sentinel.url, "apiclient.client.requests.post"),
+        (client.replace, sentinel.url, "apiclient.client.requests.put"),
+        (client.update, sentinel.url, "apiclient.client.requests.patch"),
+    ],
+)
 def test_data_parsing_delegates_to_request_formatter(client_method, url, patch_methodname):
     # GET and DELETE requests dont pass data so they are not being tested
     mock_request_formatter_call.reset_mock()
@@ -345,9 +389,9 @@ def test_read_real_world_api(json_placeholder_cassette):
     assert len(client.get_all_todos()) == 200
 
     expected_todo = {
-        'completed': False,
-        'id': 45,
-        'title': 'velit soluta adipisci molestias reiciendis harum',
-        'userId': 3,
+        "completed": False,
+        "id": 45,
+        "title": "velit soluta adipisci molestias reiciendis harum",
+        "userId": 3,
     }
     assert client.get_todo(45) == expected_todo

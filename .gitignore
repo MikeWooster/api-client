@@ -6,3 +6,6 @@ htmlcov/
 examples/
 build/
 dist/
+.python-version
+.tox/
+pip-wheel-metadata/
