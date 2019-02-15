@@ -8,7 +8,9 @@ from requests import Response
 
 from apiclient.exceptions import ClientUnexpectedError
 from apiclient.response_handlers import (
-    RequestsResponseHandler, JsonResponseHandler, BaseResponseHandler,
+    BaseResponseHandler,
+    JsonResponseHandler,
+    RequestsResponseHandler,
     XmlResponseHandler,
 )
 
@@ -18,14 +20,14 @@ def build_response(data) -> Response:
     response = Response()
     response.status_code = 200
     response.headers = {
-        'Connection': 'keep-alive',
-        'Content-Encoding': 'gzip',
-        'Content-Type': 'application/json; charset=utf-8',
+        "Connection": "keep-alive",
+        "Content-Encoding": "gzip",
+        "Content-Type": "application/json; charset=utf-8",
     }
-    response.encoding = 'utf-8'
-    response.raw = BytesIO(bytes(data, encoding='utf-8'))
+    response.encoding = "utf-8"
+    response.raw = BytesIO(bytes(data, encoding="utf-8"))
     response.reason = "OK"
-    response.url = 'https://jsonplaceholder.typicode.com/todos'
+    response.url = "https://jsonplaceholder.typicode.com/todos"
     return response
 
 

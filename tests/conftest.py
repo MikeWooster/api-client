@@ -3,7 +3,6 @@ import os
 import pytest
 import vcr
 
-
 BASE_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 VCR_CASSETTE_DIR = os.path.join(BASE_DIR, "vcr_cassettes")
 

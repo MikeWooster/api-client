@@ -4,7 +4,7 @@ import setuptools
 
 
 application_dependencies = [
-    'requests',
+    'requests>=2.16',
 ]
 prod_dependencies = []
 test_dependencies = [
@@ -16,6 +16,7 @@ lint_dependencies = [
     'flake8',
     'flake8-docstrings',
     'black',
+    'isort',
 ]
 docs_dependencies = []
 dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + [

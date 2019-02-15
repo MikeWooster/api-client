@@ -1,6 +1,11 @@
 import pytest
 
-from apiclient.authentication_methods import NoAuthentication, QueryParameterAuthentication, HeaderAuthentication, BasicAuthentication
+from apiclient.authentication_methods import (
+    BasicAuthentication,
+    HeaderAuthentication,
+    NoAuthentication,
+    QueryParameterAuthentication,
+)
 from apiclient.client import BaseClient
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler
@@ -23,7 +28,7 @@ def test_query_parameter_authentication_alters_client_default_query_parameters()
         response_handler=BaseResponseHandler,
         request_formatter=BaseRequestFormatter,
     )
-    assert client.get_default_query_params() == {'apikey': 'secret'}
+    assert client.get_default_query_params() == {"apikey": "secret"}
     assert client.get_default_headers() == {}
     assert client.get_default_username_password_authentication() is None
 
@@ -61,11 +66,7 @@ def test_header_authentication_overwriting_parameter():
     assert client.get_default_username_password_authentication() is None
 
 
-@pytest.mark.parametrize("realm", [
-    None,
-    "",
-    0,
-])
+@pytest.mark.parametrize("realm", [None, "", 0])
 def test_realm_is_not_included_when_evaluates_to_false(realm):
     client = BaseClient(
         authentication_method=HeaderAuthentication(token="secret", parameter="APIKEY", realm=realm),

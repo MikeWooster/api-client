@@ -4,7 +4,6 @@ from apiclient.utils.typing import BasicAuthType, OptionalStr
 
 
 class BaseAuthenticationMethod:
-
     def set_client(self, client):
         self._client = client
         self.add_authentication_headers()

@@ -6,18 +6,19 @@ from requests import Response
 
 from apiclient.authentication_methods import BaseAuthenticationMethod
 from apiclient.exceptions import (
-    ClientBadRequestError, ClientRedirectionError, ClientServerError, ClientUnexpectedError,
+    ClientBadRequestError,
+    ClientRedirectionError,
+    ClientServerError,
+    ClientUnexpectedError,
 )
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler
 from apiclient.utils.typing import OptionalDict
 
-
 LOG = logging.getLogger(__name__)
 
 
 class BaseClient:
-
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod,
@@ -40,7 +41,9 @@ class BaseClient:
 
     def _run_initialization_checks(self):
         if not isinstance(self._authentication_method, BaseAuthenticationMethod):
-            raise RuntimeError("provided authentication_method must be an instance of BaseAuthenticationMethod.")
+            raise RuntimeError(
+                "provided authentication_method must be an instance of BaseAuthenticationMethod."
+            )
         if not (self._response_handler and issubclass(self._response_handler, BaseResponseHandler)):
             raise RuntimeError("provided response_handler must be a subclass of BaseResponseHandler.")
         if not (self._request_formatter and issubclass(self._request_formatter, BaseRequestFormatter)):
@@ -96,7 +99,7 @@ class BaseClient:
         params: OptionalDict = None,
         headers: OptionalDict = None,
         data: OptionalDict = None,
-        **kwargs
+        **kwargs,
     ) -> Response:
         """Make the request with the given method.
 
@@ -109,7 +112,7 @@ class BaseClient:
                 headers=self._get_request_headers(headers),
                 auth=self.get_default_username_password_authentication(),
                 data=self._request_formatter.format(data),
-                **kwargs
+                **kwargs,
             )
         except Exception as error:
             LOG.error(f"An error occurred when contacting %s", endpoint, exc_info=error)
@@ -151,5 +154,11 @@ class BaseClient:
             exception_class = ClientServerError
         else:
             exception_class = ClientUnexpectedError
-        logger("%s Error: %s for url: %s. data=%s", response.status_code, response.reason, response.url, response.text)
+        logger(
+            "%s Error: %s for url: %s. data=%s",
+            response.status_code,
+            response.reason,
+            response.url,
+            response.text,
+        )
         raise exception_class(f"{response.status_code} Error: {response.reason} for url: {response.url}")

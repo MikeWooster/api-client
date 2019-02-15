@@ -6,7 +6,6 @@ from requests import Response
 
 from apiclient.exceptions import ClientUnexpectedError
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -35,7 +34,9 @@ class JsonResponseHandler(BaseResponseHandler):
             response_json = response.json()
         except JSONDecodeError as error:
             LOG.error("Unable to decode response data to json. data=%s", response.text)
-            raise ClientUnexpectedError(f"Unable to decode response data to json. data='{response.text}'") from error
+            raise ClientUnexpectedError(
+                f"Unable to decode response data to json. data='{response.text}'"
+            ) from error
         return response_json
 
 
@@ -48,5 +49,7 @@ class XmlResponseHandler(BaseResponseHandler):
             xml_element = ElementTree.fromstring(response.text)
         except ElementTree.ParseError as error:
             LOG.error("Unable to parse response data to xml. data=%s", response.text)
-            raise ClientUnexpectedError(f"Unable to parse response data to xml. data='{response.text}'") from error
+            raise ClientUnexpectedError(
+                f"Unable to parse response data to xml. data='{response.text}'"
+            ) from error
         return xml_element
