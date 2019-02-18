@@ -1,35 +1,29 @@
+import os
+
 import pytest
 
 from apiclient.decorates import endpoint
 
 
-@endpoint
+@endpoint(base_url="http://foo.com")
 class Endpoint:
-    base_url = "http://foo.com"
     search = "search"
     integer = 3
     search_id = "search/{id}"
     _protected = "protected"
 
 
-@endpoint
+@endpoint(base_url="http://foo.com///")
 class EndpointWithExtraSlash:
-    base_url = "http://foo.com///"
     search = "///search"
 
 
-@endpoint()
-class EndpointCalledWithParent:
-    base_url = "http://foo.com"
-    search = "search"
-
-
 class EndpointNotDecorated:
-    base_url = "http://foo.com"
     search = "search"
 
 
-class EndpointMissingBaseUrl:
+@endpoint(base_url=os.environ["ENDPOINT_BASE_URL"])
+class EndpointFromEnvironment:
     search = "search"
 
 
@@ -38,24 +32,15 @@ def test_endpoint():
     assert Endpoint.integer == "http://foo.com/3"
 
 
-def test_decorator_removes_traling_slashes_from_base_url():
+def test_decorator_removes_trailing_slashes_from_base_url():
     assert EndpointWithExtraSlash.search == "http://foo.com/search"
-
-
-def test_calling_decorator_with_parenthesis():
-    assert EndpointNotDecorated.search == "search"
-    endpoint(EndpointNotDecorated)
-    assert EndpointNotDecorated.search == "http://foo.com/search"
 
 
 def test_endpoint_must_contain_base_url():
     with pytest.raises(RuntimeError) as exc_info:
-        endpoint(EndpointMissingBaseUrl)
-    assert str(exc_info.value) == "An Endpoint must define a `base_url`."
-
-
-def test_endpoint_decorated_with_parens():
-    assert Endpoint.search == "http://foo.com/search"
+        endpoint(EndpointNotDecorated)
+    expected_message = "A decorated endpoint must define a base_url as @endpoint(base_url='http://foo.com')."
+    assert str(exc_info.value) == expected_message
 
 
 def test_endpoint_with_formatting():
@@ -65,3 +50,7 @@ def test_endpoint_with_formatting():
 
 def test_decorator_does_not_modify_protected_attributes():
     assert Endpoint._protected == "protected"
+
+
+def test_decorated_endpoint_loaded_from_environment_variable():
+    assert EndpointFromEnvironment.search == "http://environment.com/search"

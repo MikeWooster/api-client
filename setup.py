@@ -9,6 +9,7 @@ application_dependencies = [
 prod_dependencies = []
 test_dependencies = [
     'pytest',
+    'pytest-env',
     'pytest-cov',
     "vcrpy",
 ]
@@ -30,7 +31,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='api-client',
-    version='0.1.3',
+    version='0.2.0',
     description='Separate the high level client implementation from the underlying CRUD operations.',
     long_description=long_description,
     long_description_content_type='text/markdown',

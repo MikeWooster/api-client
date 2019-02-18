@@ -2,27 +2,27 @@
 BASE_URL_RESERVED_NAME = "base_url"
 
 
-def endpoint(cls=None):
+def endpoint(cls_=None, base_url=None):
     """Decorator for automatically constructing urls from a base_url and defined resources."""
 
     def wrap(cls):
-        return _process_class(cls)
+        return _process_class(cls, base_url)
 
-    if cls is None:
+    if cls_ is None:
         # Decorator is called as @endpoint with parens.
         return wrap
     # Decorator is called as @endpoint without parens.
-    return wrap(cls)
+    return wrap(cls_)
 
 
-def _process_class(cls):
-    if BASE_URL_RESERVED_NAME not in cls.__dict__:
-        raise RuntimeError("An Endpoint must define a `base_url`.")
-
-    base_url = str(cls.__dict__[BASE_URL_RESERVED_NAME]).rstrip("/")
+def _process_class(cls, base_url):
+    if base_url is None:
+        raise RuntimeError("A decorated endpoint must define a base_url as @endpoint(base_url='http://foo.com').")
+    else:
+        base_url = base_url.rstrip("/")
 
     for name, value in cls.__dict__.items():
-        if name.startswith("_") or name == BASE_URL_RESERVED_NAME:
+        if name.startswith("_"):
             # Ignore any private or class attributes.
             continue
         new_value = str(value).lstrip("/")

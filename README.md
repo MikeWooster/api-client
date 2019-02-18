@@ -20,9 +20,8 @@ from apiclient.decorates import endpoint
 
 
 # Define endpoints, using the provided decorator.
-@endpoint
+@endpoint(base_url="https://jsonplaceholder.typicode.com")
 class Endpoint:
-    base_url = "https://jsonplaceholder.typicode.com"
     todos = "todos"
     todo = "todos/{id}"
 
@@ -259,9 +258,8 @@ Example:
 ```
 from apiclient.decorates import endpoint
 
-@endpoint
+@endpoint(base_url="http://foo.com")
 class Endpoint:
-    base_url = "http://foo.com"
     resource = "search"
 
 >>> Endpoint.resource
