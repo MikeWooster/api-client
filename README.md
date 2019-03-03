@@ -87,6 +87,34 @@ NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/tod
 
 ```
 
+## BaseClient Interface
+The `BaseClient` provides the following public interface:
+* `create(self, endpoint: str, data: dict)`
+
+   Delegate to POST method to send data and return response from endpoint.
+
+* `read(endpoint: str, params: OptionalDict = None)`
+
+   Delegate to GET method to get response from endpoint.
+
+* `replace(endpoint: str, data: dict, params: OptionalDict = None)`
+
+   Delegate to PUT method to send and overwrite data and return response from endpoint.
+
+* `update(endpoint: str, data: dict, params: OptionalDict = None)`
+
+   Delegate to PATCH method to send and update data and return response from endpoint
+
+* `delete(endpoint: str, params: OptionalDict = None)`
+
+   Delegate to DELETE method to remove resource located at endpoint.
+
+* `get_exception_map() -> dict`
+
+   If not overridden will use the default dictionary defined to map bad response
+   status codes into the relevant exceptions.  Users can customize the exceptions
+   raised by overriding this method.
+
 ## Authentication Methods
 Authentication methods provide a way in which you can customize the
 client with various authentication schemes through dependency injection,
