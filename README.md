@@ -77,13 +77,13 @@ class JSONPlaceholderClient(BaseClient):
 # REST APIs correctly adhering to the status codes to provide meaningful
 # responses will raise the appropriate exeptions.
 >>> client.get_todo(450)
-ClientBadRequestError: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/todos/450
+NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/todos/450
 
 >>> try:
 ...     client.get_todo(450)
-... except ClientError:
-...     print("All client exceptions inherit from ClientError")
-"All client exceptions inherit from ClientError"
+... except APIClientError:
+...     print("All client exceptions inherit from APIClientError")
+"All client exceptions inherit from APIClientError"
 
 ```
 
@@ -190,12 +190,12 @@ alteration.
 
 ### `JsonResponseHandler`
 Handler that parses the response data to `json` and returns the dictionary.
-If an error occurs trying to parse to json then a `ClientUnexpectedError`
+If an error occurs trying to parse to json then a `UnexpectedError`
 will be raised.
 
 ### `XmlResponseHandler`
 Handler that parses the response data to an `xml.etree.ElementTree.Element`.
-If an error occurs trying to parse to xml then a `ClientUnexpectedError`
+If an error occurs trying to parse to xml then a `UnexpectedError`
 will be raised.
 
 ## Request Formatters
@@ -226,21 +226,77 @@ Formatter that converts the data into a json format and adds the
 
 ## Exceptions
 
-All exceptions raised as part of the apiclient inherit from `ClientError`.
+All exceptions raised as part of the apiclient inherit from `APIClientError`.
+In order to comply with REST API standards, exceptions have been split into a granular
+level, allowing the user to map direct exceptions easily.  Exceptions have been split
+into the following groups.
 
-### `ClientBadRequestError`
-The client was used incorrectly for contacting the API. This is due
-primarily to user input by passing invalid data to the API.
-
-### `ClientRedirectionError`
+### `RedirectionError`
 A redirection status code was returned as a final code when making the
 request. This means that no data can be returned to the client as we could
 not find the requested resource as it had moved.
 
-### `ClientServerError`
+The following exceptions inherit from `RedirectionError`:
+- MultipleChoices
+- MovedPermanently
+- Found
+- SeeOther
+- NotModified
+- UseProxy
+- TemporaryRedirect
+- PermanentRedirect
+
+
+### `ClientError`
+The client was used incorrectly for contacting the API. This is due
+primarily to user input by passing invalid data to the API.
+
+The following exceptions inherit from `ClientError`:
+- BadRequest
+- Unauthorized
+- PaymentRequired
+- Forbidden
+- NotFound
+- MethodNotAllowed
+- NotAcceptable
+- ProxyAuthenticationRequired
+- RequestTimeout
+- Conflict
+- Gone
+- LengthRequired
+- PreconditionFailed
+- RequestEntityTooLarge
+- RequestUriTooLong
+- UnsupportedMediaType
+- RequestedRangeNotSatisfiable
+- ExpectationFailed
+- UnprocessableEntity
+- Locked
+- FailedDependency
+- UpgradeRequired
+- PreconditionRequired
+- TooManyRequests
+- RequestHeaderFieldsTooLarge
+
+
+### `ServerError`
 The API was unreachable when making the request.
 
-### `ClientUnexpectedError`
+The following exceptions inherit from `ServerError`:
+- InternalServerError
+- NotImplemented
+- BadGateway
+- ServiceUnavailable
+- GatewayTimeout
+- HttpVersionNotSupported
+- VariantAlsoNegotiates
+- InsufficientStorage
+- LoopDetected
+- NotExtended
+- NetworkAuthenticationRequired
+
+
+### `UnexpectedError`
 An unexpected error occurred when using the client.  This will most likely
 be the result of another exception being raised.  If possible, the original
 exception will be indicated as the causing exception of this error.

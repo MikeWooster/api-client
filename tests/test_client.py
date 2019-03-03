@@ -1,17 +1,14 @@
 import logging
+from http import HTTPStatus
 from unittest.mock import Mock, patch, sentinel
 
 import pytest
 
+from apiclient import exceptions
 from apiclient.authentication_methods import NoAuthentication
 from apiclient.client import LOG as client_logger
 from apiclient.client import BaseClient
-from apiclient.exceptions import (
-    ClientBadRequestError,
-    ClientRedirectionError,
-    ClientServerError,
-    ClientUnexpectedError,
-)
+from apiclient.exceptions import ClientError, RedirectionError, ServerError, UnexpectedError
 from apiclient.request_formatters import BaseRequestFormatter, JsonRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler, JsonResponseHandler
 
@@ -193,10 +190,11 @@ def test_make_request_error_raises_and_logs_unexpected_error(
     caplog.set_level(level=logging.ERROR, logger=client_logger.name)
     with patch(patch_methodname) as mock_requests_method:
         mock_requests_method.side_effect = (ValueError("Error raised for testing"),)
-        with pytest.raises(ClientUnexpectedError) as exc_info:
+        with pytest.raises(UnexpectedError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "Error when contacting 'sentinel.url'"
-    assert "An error occurred when contacting sentinel.url" in caplog.messages
+    messages = [r.message for r in caplog.records if r.levelno == logging.ERROR]
+    assert "An error occurred when contacting sentinel.url" in messages
 
 
 @pytest.mark.parametrize(
@@ -219,13 +217,11 @@ def test_server_error_raises_and_logs_client_server_error(
         mock_requests_method.return_value.reason = "A TEST server error occurred"
         mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
-        with pytest.raises(ClientServerError) as exc_info:
+        with pytest.raises(ServerError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "500 Error: A TEST server error occurred for url: sentinel.url"
-    assert (
-        "500 Error: A TEST server error occurred for url: sentinel.url. data={'foo': 'bar'}"
-        in caplog.messages
-    )
+    messages = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+    assert "500 Error: A TEST server error occurred for url: sentinel.url. data={'foo': 'bar'}" in messages
 
 
 @pytest.mark.parametrize(
@@ -248,12 +244,12 @@ def test_not_modified_response_raises_and_logs_client_redirection_error(
         mock_requests_method.return_value.reason = "A TEST redirection error occurred"
         mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
-        with pytest.raises(ClientRedirectionError) as exc_info:
+        with pytest.raises(RedirectionError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "304 Error: A TEST redirection error occurred for url: sentinel.url"
+    messages = [r.message for r in caplog.records if r.levelno == logging.ERROR]
     assert (
-        "304 Error: A TEST redirection error occurred for url: sentinel.url. data={'foo': 'bar'}"
-        in caplog.messages
+        "304 Error: A TEST redirection error occurred for url: sentinel.url. data={'foo': 'bar'}" in messages
     )
 
 
@@ -277,12 +273,12 @@ def test_not_found_response_raises_and_logs_client_bad_request_error(
         mock_requests_method.return_value.reason = "A TEST not found error occurred"
         mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
-        with pytest.raises(ClientBadRequestError) as exc_info:
+        with pytest.raises(ClientError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "404 Error: A TEST not found error occurred for url: sentinel.url"
+    messages = [r.message for r in caplog.records if r.levelno == logging.ERROR]
     assert (
-        "404 Error: A TEST not found error occurred for url: sentinel.url. data={'foo': 'bar'}"
-        in caplog.messages
+        "404 Error: A TEST not found error occurred for url: sentinel.url. data={'foo': 'bar'}" in messages
     )
 
 
@@ -306,13 +302,14 @@ def test_unexpected_status_code_response_raises_and_logs_unexpected_error(
         mock_requests_method.return_value.reason = "A TEST bad status code error occurred"
         mock_requests_method.return_value.text = "{'foo': 'bar'}"
 
-        with pytest.raises(ClientUnexpectedError) as exc_info:
+        with pytest.raises(UnexpectedError) as exc_info:
             client_method(*client_args)
     assert str(exc_info.value) == "100 Error: A TEST bad status code error occurred for url: sentinel.url"
+    messages = [r.message for r in caplog.records if r.levelno == logging.ERROR]
     expected_log_message = (
         "100 Error: A TEST bad status code error occurred for url: sentinel.url. " "data={'foo': 'bar'}"
     )
-    assert expected_log_message in caplog.messages
+    assert expected_log_message in messages
 
 
 @pytest.mark.parametrize(
@@ -395,3 +392,59 @@ def test_read_real_world_api(json_placeholder_cassette):
         "userId": 3,
     }
     assert client.get_todo(45) == expected_todo
+
+
+@pytest.mark.parametrize(
+    "status_code,expected_exception",
+    [
+        (HTTPStatus.MULTIPLE_CHOICES, exceptions.MultipleChoices),
+        (HTTPStatus.MOVED_PERMANENTLY, exceptions.MovedPermanently),
+        (HTTPStatus.FOUND, exceptions.Found),
+        (HTTPStatus.SEE_OTHER, exceptions.SeeOther),
+        (HTTPStatus.NOT_MODIFIED, exceptions.NotModified),
+        (HTTPStatus.USE_PROXY, exceptions.UseProxy),
+        (HTTPStatus.TEMPORARY_REDIRECT, exceptions.TemporaryRedirect),
+        (HTTPStatus.PERMANENT_REDIRECT, exceptions.PermanentRedirect),
+        (HTTPStatus.BAD_REQUEST, exceptions.BadRequest),
+        (HTTPStatus.UNAUTHORIZED, exceptions.Unauthorized),
+        (HTTPStatus.PAYMENT_REQUIRED, exceptions.PaymentRequired),
+        (HTTPStatus.FORBIDDEN, exceptions.Forbidden),
+        (HTTPStatus.NOT_FOUND, exceptions.NotFound),
+        (HTTPStatus.NOT_ACCEPTABLE, exceptions.NotAcceptable),
+        (HTTPStatus.PROXY_AUTHENTICATION_REQUIRED, exceptions.ProxyAuthenticationRequired),
+        (HTTPStatus.REQUEST_TIMEOUT, exceptions.RequestTimeout),
+        (HTTPStatus.CONFLICT, exceptions.Conflict),
+        (HTTPStatus.GONE, exceptions.Gone),
+        (HTTPStatus.LENGTH_REQUIRED, exceptions.LengthRequired),
+        (HTTPStatus.PRECONDITION_FAILED, exceptions.PreconditionFailed),
+        (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, exceptions.RequestEntityTooLarge),
+        (HTTPStatus.REQUEST_URI_TOO_LONG, exceptions.RequestUriTooLong),
+        (HTTPStatus.UNSUPPORTED_MEDIA_TYPE, exceptions.UnsupportedMediaType),
+        (HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE, exceptions.RequestedRangeNotSatisfiable),
+        (HTTPStatus.EXPECTATION_FAILED, exceptions.ExpectationFailed),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, exceptions.UnprocessableEntity),
+        (HTTPStatus.LOCKED, exceptions.Locked),
+        (HTTPStatus.FAILED_DEPENDENCY, exceptions.FailedDependency),
+        (HTTPStatus.UPGRADE_REQUIRED, exceptions.UpgradeRequired),
+        (HTTPStatus.PRECONDITION_REQUIRED, exceptions.PreconditionRequired),
+        (HTTPStatus.TOO_MANY_REQUESTS, exceptions.TooManyRequests),
+        (HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, exceptions.RequestHeaderFieldsTooLarge),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, exceptions.InternalServerError),
+        (HTTPStatus.NOT_IMPLEMENTED, exceptions.NotImplemented),
+        (HTTPStatus.BAD_GATEWAY, exceptions.BadGateway),
+        (HTTPStatus.SERVICE_UNAVAILABLE, exceptions.ServiceUnavailable),
+        (HTTPStatus.GATEWAY_TIMEOUT, exceptions.GatewayTimeout),
+        (HTTPStatus.HTTP_VERSION_NOT_SUPPORTED, exceptions.HttpVersionNotSupported),
+        (HTTPStatus.VARIANT_ALSO_NEGOTIATES, exceptions.VariantAlsoNegotiates),
+        (HTTPStatus.INSUFFICIENT_STORAGE, exceptions.InsufficientStorage),
+        (HTTPStatus.LOOP_DETECTED, exceptions.LoopDetected),
+        (HTTPStatus.NOT_EXTENDED, exceptions.NotExtended),
+        (HTTPStatus.NETWORK_AUTHENTICATION_REQUIRED, exceptions.NetworkAuthenticationRequired),
+    ],
+)
+def test_exceptions_get_mapped_correctly_by_response_status_code(status_code, expected_exception):
+    with patch("apiclient.client.requests.get") as mock_get:
+        mock_get.return_value.status_code = status_code
+
+        with pytest.raises(expected_exception):
+            client.read(sentinel.url)
