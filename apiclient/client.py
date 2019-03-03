@@ -1,16 +1,12 @@
 import logging
+from http import HTTPStatus
 from typing import Callable, Optional, Type
 
 import requests
 from requests import Response
 
 from apiclient.authentication_methods import BaseAuthenticationMethod
-from apiclient.exceptions import (
-    ClientBadRequestError,
-    ClientRedirectionError,
-    ClientServerError,
-    ClientUnexpectedError,
-)
+from apiclient import exceptions
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler
 from apiclient.utils.typing import OptionalDict
@@ -19,6 +15,52 @@ LOG = logging.getLogger(__name__)
 
 
 class BaseClient:
+    EXCEPTION_MAP = {
+        HTTPStatus.MULTIPLE_CHOICES: exceptions.MultipleChoices,
+        HTTPStatus.MOVED_PERMANENTLY: exceptions.MovedPermanently,
+        HTTPStatus.FOUND: exceptions.Found,
+        HTTPStatus.SEE_OTHER: exceptions.SeeOther,
+        HTTPStatus.NOT_MODIFIED: exceptions.NotModified,
+        HTTPStatus.USE_PROXY: exceptions.UseProxy,
+        HTTPStatus.TEMPORARY_REDIRECT: exceptions.TemporaryRedirect,
+        HTTPStatus.PERMANENT_REDIRECT: exceptions.PermanentRedirect,
+        HTTPStatus.BAD_REQUEST: exceptions.BadRequest,
+        HTTPStatus.UNAUTHORIZED: exceptions.Unauthorized,
+        HTTPStatus.PAYMENT_REQUIRED: exceptions.PaymentRequired,
+        HTTPStatus.FORBIDDEN: exceptions.Forbidden,
+        HTTPStatus.NOT_FOUND: exceptions.NotFound,
+        HTTPStatus.NOT_ACCEPTABLE: exceptions.NotAcceptable,
+        HTTPStatus.PROXY_AUTHENTICATION_REQUIRED: exceptions.ProxyAuthenticationRequired,
+        HTTPStatus.REQUEST_TIMEOUT: exceptions.RequestTimeout,
+        HTTPStatus.CONFLICT: exceptions.Conflict,
+        HTTPStatus.GONE: exceptions.Gone,
+        HTTPStatus.LENGTH_REQUIRED: exceptions.LengthRequired,
+        HTTPStatus.PRECONDITION_FAILED: exceptions.PreconditionFailed,
+        HTTPStatus.REQUEST_ENTITY_TOO_LARGE: exceptions.RequestEntityTooLarge,
+        HTTPStatus.REQUEST_URI_TOO_LONG: exceptions.RequestUriTooLong,
+        HTTPStatus.UNSUPPORTED_MEDIA_TYPE: exceptions.UnsupportedMediaType,
+        HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE: exceptions.RequestedRangeNotSatisfiable,
+        HTTPStatus.EXPECTATION_FAILED: exceptions.ExpectationFailed,
+        HTTPStatus.UNPROCESSABLE_ENTITY: exceptions.UnprocessableEntity,
+        HTTPStatus.LOCKED: exceptions.Locked,
+        HTTPStatus.FAILED_DEPENDENCY: exceptions.FailedDependency,
+        HTTPStatus.UPGRADE_REQUIRED: exceptions.UpgradeRequired,
+        HTTPStatus.PRECONDITION_REQUIRED: exceptions.PreconditionRequired,
+        HTTPStatus.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
+        HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE: exceptions.RequestHeaderFieldsTooLarge,
+        HTTPStatus.INTERNAL_SERVER_ERROR: exceptions.InternalServerError,
+        HTTPStatus.NOT_IMPLEMENTED: exceptions.NotImplemented,
+        HTTPStatus.BAD_GATEWAY: exceptions.BadGateway,
+        HTTPStatus.SERVICE_UNAVAILABLE: exceptions.ServiceUnavailable,
+        HTTPStatus.GATEWAY_TIMEOUT: exceptions.GatewayTimeout,
+        HTTPStatus.HTTP_VERSION_NOT_SUPPORTED: exceptions.HttpVersionNotSupported,
+        HTTPStatus.VARIANT_ALSO_NEGOTIATES: exceptions.VariantAlsoNegotiates,
+        HTTPStatus.INSUFFICIENT_STORAGE: exceptions.InsufficientStorage,
+        HTTPStatus.LOOP_DETECTED: exceptions.LoopDetected,
+        HTTPStatus.NOT_EXTENDED: exceptions.NotExtended,
+        HTTPStatus.NETWORK_AUTHENTICATION_REQUIRED: exceptions.NetworkAuthenticationRequired,
+    }
+
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod,
@@ -116,7 +158,7 @@ class BaseClient:
             )
         except Exception as error:
             LOG.error(f"An error occurred when contacting %s", endpoint, exc_info=error)
-            raise ClientUnexpectedError(f"Error when contacting '{endpoint}'") from error
+            raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)
         return self._response_handler.get_request_data(response)
@@ -142,18 +184,10 @@ class BaseClient:
 
     def _handle_bad_response(self, response: Response):
         """Convert the error into an understandable client exception."""
-        logger = LOG.error
-        if 300 <= response.status_code < 400:
-            exception_class = ClientRedirectionError
-        elif 400 <= response.status_code < 500:
-            exception_class = ClientBadRequestError
-        elif 500 <= response.status_code < 600:
-            # Here a warning is logged instead of an error as server errors
-            # are common, and can typically be retried.
-            logger = LOG.warning
-            exception_class = ClientServerError
-        else:
-            exception_class = ClientUnexpectedError
+        exception_class = self.get_exception_map().get(
+            response.status_code, self._get_fallback_exception(response.status_code)
+        )
+        logger = self._get_logger_from_exception_type(exception_class)
         logger(
             "%s Error: %s for url: %s. data=%s",
             response.status_code,
@@ -162,3 +196,28 @@ class BaseClient:
             response.text,
         )
         raise exception_class(f"{response.status_code} Error: {response.reason} for url: {response.url}")
+
+    def get_exception_map(self) -> dict:
+        """Map status codes to exceptions.
+
+        Override method to add, remove or customize extensions.
+        """
+        return self.EXCEPTION_MAP
+
+    @staticmethod
+    def _get_fallback_exception(status_code: int) -> Type[exceptions.APIClientError]:
+        if 300 <= status_code < 400:
+            exception_class = exceptions.RedirectionError
+        elif 400 <= status_code < 500:
+            exception_class = exceptions.BadRequest
+        elif 500 <= status_code < 600:
+            exception_class = exceptions.ServerError
+        else:
+            exception_class = exceptions.UnexpectedError
+        return exception_class
+
+    @staticmethod
+    def _get_logger_from_exception_type(exception_class) -> LOG:
+        if issubclass(exception_class, exceptions.ServerError):
+            return LOG.warning
+        return LOG.error

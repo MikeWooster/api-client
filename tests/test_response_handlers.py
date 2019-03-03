@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 import pytest
 from requests import Response
 
-from apiclient.exceptions import ClientUnexpectedError
+from apiclient.exceptions import UnexpectedError
 from apiclient.response_handlers import (
     BaseResponseHandler,
     JsonResponseHandler,
@@ -57,7 +57,7 @@ class TestJsonResponseHandler:
 
     def test_bad_json_raises_unexpected_error(self):
         response = build_response(data="foo")
-        with pytest.raises(ClientUnexpectedError) as exc_info:
+        with pytest.raises(UnexpectedError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to decode response data to json. data='foo'"
 
@@ -75,6 +75,6 @@ class TestXmlResponseHandler:
 
     def test_bad_xml_raises_unexpected_error(self):
         response = build_response(data="foo")
-        with pytest.raises(ClientUnexpectedError) as exc_info:
+        with pytest.raises(UnexpectedError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to xml. data='foo'"

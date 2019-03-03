@@ -1,7 +1,3 @@
-# This defines the base url in the endpoint and must be present.
-BASE_URL_RESERVED_NAME = "base_url"
-
-
 def endpoint(cls_=None, base_url=None):
     """Decorator for automatically constructing urls from a base_url and defined resources."""
 
@@ -17,7 +13,9 @@ def endpoint(cls_=None, base_url=None):
 
 def _process_class(cls, base_url):
     if base_url is None:
-        raise RuntimeError("A decorated endpoint must define a base_url as @endpoint(base_url='http://foo.com').")
+        raise RuntimeError(
+            "A decorated endpoint must define a base_url as @endpoint(base_url='http://foo.com')."
+        )
     else:
         base_url = base_url.rstrip("/")
 
