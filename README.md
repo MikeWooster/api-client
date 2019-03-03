@@ -132,27 +132,27 @@ authentication_method=HeaderAuthentication(token="secret_value")
 # Constructs request header:
 {"Authorization": "Bearer secret_value"}
 ```
-The `Authorization` parameter and `Bearer` realm can be adjusted by
+The `Authorization` parameter and `Bearer` scheme can be adjusted by
 specifying on method initialization.
 ```
 authentication_method=HeaderAuthentication(
    token="secret_value"
    parameter="Foo",
-   realm="Bar",
+   scheme="Bar",
 )
 
 # Constructs request header:
 {"Foo": "Bar secret_value"}
 ```
 
-Or alternatively, when APIs do not require a realm to be set, you can
-specify it as a value that evaluates to False to remove the realm from
+Or alternatively, when APIs do not require a scheme to be set, you can
+specify it as a value that evaluates to False to remove the scheme from
 the header:
 ```
 authentication_method=HeaderAuthentication(
    token="secret_value"
    parameter="Foo",
-   realm=None,
+   scheme=None,
 )
 
 # Constructs request header:
