@@ -44,9 +44,9 @@ def test_header_authentication_with_default_values():
     assert client.get_default_username_password_authentication() is None
 
 
-def test_header_authentication_overwriting_realm():
+def test_header_authentication_overwriting_scheme():
     client = BaseClient(
-        authentication_method=HeaderAuthentication(token="secret", realm="Token"),
+        authentication_method=HeaderAuthentication(token="secret", scheme="Token"),
         response_handler=BaseResponseHandler,
         request_formatter=BaseRequestFormatter,
     )
@@ -66,10 +66,10 @@ def test_header_authentication_overwriting_parameter():
     assert client.get_default_username_password_authentication() is None
 
 
-@pytest.mark.parametrize("realm", [None, "", 0])
-def test_realm_is_not_included_when_evaluates_to_false(realm):
+@pytest.mark.parametrize("scheme", [None, "", 0])
+def test_scheme_is_not_included_when_evaluates_to_false(scheme):
     client = BaseClient(
-        authentication_method=HeaderAuthentication(token="secret", parameter="APIKEY", realm=realm),
+        authentication_method=HeaderAuthentication(token="secret", parameter="APIKEY", scheme=scheme),
         response_handler=BaseResponseHandler,
         request_formatter=BaseRequestFormatter,
     )

@@ -58,14 +58,14 @@ class HeaderAuthentication(BaseAuthenticationMethod):
     "Authorization: Bearer <token>"
     """
 
-    def __init__(self, token: str, parameter: str = "Authorization", realm: OptionalStr = "Bearer"):
+    def __init__(self, token: str, parameter: str = "Authorization", scheme: OptionalStr = "Bearer"):
         self._token = token
         self._parameter = parameter
-        self._realm = realm
+        self._scheme = scheme
 
     def get_authentication_headers(self):
-        if self._realm:
-            return {self._parameter: f"{self._realm} {self._token}"}
+        if self._scheme:
+            return {self._parameter: f"{self._scheme} {self._token}"}
         else:
             return {self._parameter: self._token}
 
