@@ -4,6 +4,7 @@ from unittest.mock import sentinel
 from xml.etree import ElementTree
 
 import pytest
+import yaml
 from requests import Response
 
 from apiclient.exceptions import UnexpectedError
@@ -12,6 +13,7 @@ from apiclient.response_handlers import (
     JsonResponseHandler,
     RequestsResponseHandler,
     XmlResponseHandler,
+    YamlResponseHandler,
 )
 
 
@@ -78,3 +80,24 @@ class TestXmlResponseHandler:
         with pytest.raises(UnexpectedError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to xml. data='foo'"
+
+
+class TestYamlResponseHandler:
+    handler = YamlResponseHandler
+
+    def test_response_data_is_parsed_correctly(self):
+        document = """
+          a: 1
+          b:
+            c: 2
+            d: 3
+        """
+        response = build_response(data=document)
+        data = self.handler.get_request_data(response)
+        assert data == {"a": 1, "b": {"c": 2, "d": 3}}
+
+    def test_bad_yaml_raises_unexpected_error(self):
+        response = build_response(data="foo:    bar:   2")
+        with pytest.raises(UnexpectedError) as exc_info:
+            self.handler.get_request_data(response)
+        assert str(exc_info.value) == "Unable to parse response data to yaml. data='foo:    bar:   2'"

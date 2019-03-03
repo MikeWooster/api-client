@@ -5,8 +5,8 @@ from typing import Callable, Optional, Type
 import requests
 from requests import Response
 
-from apiclient.authentication_methods import BaseAuthenticationMethod
 from apiclient import exceptions
+from apiclient.authentication_methods import BaseAuthenticationMethod
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler
 from apiclient.utils.typing import OptionalDict
