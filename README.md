@@ -115,6 +115,13 @@ The `BaseClient` provides the following public interface:
    status codes into the relevant exceptions.  Users can customize the exceptions
    raised by overriding this method.
 
+* `get_request_timeout() -> float`
+
+   By default, all requests have been set to have a default timeout of 10.0 s.  This
+   is to avoid the request waiting forever for a response, and is recommended
+   to always be set to a value in production applications.  It is however possible to
+   override this method to return the timeout required by your application.
+
 ## Authentication Methods
 Authentication methods provide a way in which you can customize the
 client with various authentication schemes through dependency injection,

@@ -14,53 +14,59 @@ from apiclient.utils.typing import OptionalDict
 LOG = logging.getLogger(__name__)
 
 
-class BaseClient:
-    EXCEPTION_MAP = {
-        HTTPStatus.MULTIPLE_CHOICES: exceptions.MultipleChoices,
-        HTTPStatus.MOVED_PERMANENTLY: exceptions.MovedPermanently,
-        HTTPStatus.FOUND: exceptions.Found,
-        HTTPStatus.SEE_OTHER: exceptions.SeeOther,
-        HTTPStatus.NOT_MODIFIED: exceptions.NotModified,
-        HTTPStatus.USE_PROXY: exceptions.UseProxy,
-        HTTPStatus.TEMPORARY_REDIRECT: exceptions.TemporaryRedirect,
-        HTTPStatus.PERMANENT_REDIRECT: exceptions.PermanentRedirect,
-        HTTPStatus.BAD_REQUEST: exceptions.BadRequest,
-        HTTPStatus.UNAUTHORIZED: exceptions.Unauthorized,
-        HTTPStatus.PAYMENT_REQUIRED: exceptions.PaymentRequired,
-        HTTPStatus.FORBIDDEN: exceptions.Forbidden,
-        HTTPStatus.NOT_FOUND: exceptions.NotFound,
-        HTTPStatus.NOT_ACCEPTABLE: exceptions.NotAcceptable,
-        HTTPStatus.PROXY_AUTHENTICATION_REQUIRED: exceptions.ProxyAuthenticationRequired,
-        HTTPStatus.REQUEST_TIMEOUT: exceptions.RequestTimeout,
-        HTTPStatus.CONFLICT: exceptions.Conflict,
-        HTTPStatus.GONE: exceptions.Gone,
-        HTTPStatus.LENGTH_REQUIRED: exceptions.LengthRequired,
-        HTTPStatus.PRECONDITION_FAILED: exceptions.PreconditionFailed,
-        HTTPStatus.REQUEST_ENTITY_TOO_LARGE: exceptions.RequestEntityTooLarge,
-        HTTPStatus.REQUEST_URI_TOO_LONG: exceptions.RequestUriTooLong,
-        HTTPStatus.UNSUPPORTED_MEDIA_TYPE: exceptions.UnsupportedMediaType,
-        HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE: exceptions.RequestedRangeNotSatisfiable,
-        HTTPStatus.EXPECTATION_FAILED: exceptions.ExpectationFailed,
-        HTTPStatus.UNPROCESSABLE_ENTITY: exceptions.UnprocessableEntity,
-        HTTPStatus.LOCKED: exceptions.Locked,
-        HTTPStatus.FAILED_DEPENDENCY: exceptions.FailedDependency,
-        HTTPStatus.UPGRADE_REQUIRED: exceptions.UpgradeRequired,
-        HTTPStatus.PRECONDITION_REQUIRED: exceptions.PreconditionRequired,
-        HTTPStatus.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
-        HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE: exceptions.RequestHeaderFieldsTooLarge,
-        HTTPStatus.INTERNAL_SERVER_ERROR: exceptions.InternalServerError,
-        HTTPStatus.NOT_IMPLEMENTED: exceptions.NotImplemented,
-        HTTPStatus.BAD_GATEWAY: exceptions.BadGateway,
-        HTTPStatus.SERVICE_UNAVAILABLE: exceptions.ServiceUnavailable,
-        HTTPStatus.GATEWAY_TIMEOUT: exceptions.GatewayTimeout,
-        HTTPStatus.HTTP_VERSION_NOT_SUPPORTED: exceptions.HttpVersionNotSupported,
-        HTTPStatus.VARIANT_ALSO_NEGOTIATES: exceptions.VariantAlsoNegotiates,
-        HTTPStatus.INSUFFICIENT_STORAGE: exceptions.InsufficientStorage,
-        HTTPStatus.LOOP_DETECTED: exceptions.LoopDetected,
-        HTTPStatus.NOT_EXTENDED: exceptions.NotExtended,
-        HTTPStatus.NETWORK_AUTHENTICATION_REQUIRED: exceptions.NetworkAuthenticationRequired,
-    }
+# Maps status codes to exceptions.
+EXCEPTION_MAP = {
+    HTTPStatus.MULTIPLE_CHOICES: exceptions.MultipleChoices,
+    HTTPStatus.MOVED_PERMANENTLY: exceptions.MovedPermanently,
+    HTTPStatus.FOUND: exceptions.Found,
+    HTTPStatus.SEE_OTHER: exceptions.SeeOther,
+    HTTPStatus.NOT_MODIFIED: exceptions.NotModified,
+    HTTPStatus.USE_PROXY: exceptions.UseProxy,
+    HTTPStatus.TEMPORARY_REDIRECT: exceptions.TemporaryRedirect,
+    HTTPStatus.PERMANENT_REDIRECT: exceptions.PermanentRedirect,
+    HTTPStatus.BAD_REQUEST: exceptions.BadRequest,
+    HTTPStatus.UNAUTHORIZED: exceptions.Unauthorized,
+    HTTPStatus.PAYMENT_REQUIRED: exceptions.PaymentRequired,
+    HTTPStatus.FORBIDDEN: exceptions.Forbidden,
+    HTTPStatus.NOT_FOUND: exceptions.NotFound,
+    HTTPStatus.NOT_ACCEPTABLE: exceptions.NotAcceptable,
+    HTTPStatus.PROXY_AUTHENTICATION_REQUIRED: exceptions.ProxyAuthenticationRequired,
+    HTTPStatus.REQUEST_TIMEOUT: exceptions.RequestTimeout,
+    HTTPStatus.CONFLICT: exceptions.Conflict,
+    HTTPStatus.GONE: exceptions.Gone,
+    HTTPStatus.LENGTH_REQUIRED: exceptions.LengthRequired,
+    HTTPStatus.PRECONDITION_FAILED: exceptions.PreconditionFailed,
+    HTTPStatus.REQUEST_ENTITY_TOO_LARGE: exceptions.RequestEntityTooLarge,
+    HTTPStatus.REQUEST_URI_TOO_LONG: exceptions.RequestUriTooLong,
+    HTTPStatus.UNSUPPORTED_MEDIA_TYPE: exceptions.UnsupportedMediaType,
+    HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE: exceptions.RequestedRangeNotSatisfiable,
+    HTTPStatus.EXPECTATION_FAILED: exceptions.ExpectationFailed,
+    HTTPStatus.UNPROCESSABLE_ENTITY: exceptions.UnprocessableEntity,
+    HTTPStatus.LOCKED: exceptions.Locked,
+    HTTPStatus.FAILED_DEPENDENCY: exceptions.FailedDependency,
+    HTTPStatus.UPGRADE_REQUIRED: exceptions.UpgradeRequired,
+    HTTPStatus.PRECONDITION_REQUIRED: exceptions.PreconditionRequired,
+    HTTPStatus.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
+    HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE: exceptions.RequestHeaderFieldsTooLarge,
+    HTTPStatus.INTERNAL_SERVER_ERROR: exceptions.InternalServerError,
+    HTTPStatus.NOT_IMPLEMENTED: exceptions.NotImplemented,
+    HTTPStatus.BAD_GATEWAY: exceptions.BadGateway,
+    HTTPStatus.SERVICE_UNAVAILABLE: exceptions.ServiceUnavailable,
+    HTTPStatus.GATEWAY_TIMEOUT: exceptions.GatewayTimeout,
+    HTTPStatus.HTTP_VERSION_NOT_SUPPORTED: exceptions.HttpVersionNotSupported,
+    HTTPStatus.VARIANT_ALSO_NEGOTIATES: exceptions.VariantAlsoNegotiates,
+    HTTPStatus.INSUFFICIENT_STORAGE: exceptions.InsufficientStorage,
+    HTTPStatus.LOOP_DETECTED: exceptions.LoopDetected,
+    HTTPStatus.NOT_EXTENDED: exceptions.NotExtended,
+    HTTPStatus.NETWORK_AUTHENTICATION_REQUIRED: exceptions.NetworkAuthenticationRequired,
+}
 
+
+# Timeout in seconds (float)
+DEFAULT_TIMEOUT = 10.0
+
+
+class BaseClient:
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod,
@@ -154,6 +160,7 @@ class BaseClient:
                 headers=self._get_request_headers(headers),
                 auth=self.get_default_username_password_authentication(),
                 data=self._request_formatter.format(data),
+                timeout=self.get_request_timeout(),
                 **kwargs,
             )
         except Exception as error:
@@ -176,6 +183,10 @@ class BaseClient:
             headers = {}
         headers.update(self.get_default_headers())
         return headers
+
+    def get_request_timeout(self) -> float:
+        """Return the number of seconds before the request times out."""
+        return DEFAULT_TIMEOUT
 
     def _check_response(self, response: Response):
         """Raise a custom exception if the response is not OK."""
@@ -202,7 +213,7 @@ class BaseClient:
 
         Override method to add, remove or customize extensions.
         """
-        return self.EXCEPTION_MAP
+        return EXCEPTION_MAP
 
     @staticmethod
     def _get_fallback_exception(status_code: int) -> Type[exceptions.APIClientError]:

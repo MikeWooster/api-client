@@ -138,7 +138,7 @@ def test_create_method_success(mock_requests):
     mock_requests.post.return_value.status_code = 201
     client.create(sentinel.url, data={"foo": "bar"})
     mock_requests.post.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
 
 
@@ -146,7 +146,9 @@ def test_create_method_success(mock_requests):
 def test_read_method_success(mock_requests):
     mock_requests.get.return_value.status_code = 200
     client.read(sentinel.url)
-    mock_requests.get.assert_called_once_with(sentinel.url, auth=None, headers={}, params={}, data=None)
+    mock_requests.get.assert_called_once_with(
+        sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
+    )
 
 
 @patch("apiclient.client.requests")
@@ -154,7 +156,7 @@ def test_replace_method_success(mock_requests):
     mock_requests.put.return_value.status_code = 200
     client.replace(sentinel.url, data={"foo": "bar"})
     mock_requests.put.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
 
 
@@ -163,7 +165,7 @@ def test_update_method_success(mock_requests):
     mock_requests.patch.return_value.status_code = 200
     client.update(sentinel.url, data={"foo": "bar"})
     mock_requests.patch.assert_called_once_with(
-        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
 
 
@@ -171,7 +173,9 @@ def test_update_method_success(mock_requests):
 def test_delete_method_success(mock_requests):
     mock_requests.delete.return_value.status_code = 200
     client.delete(sentinel.url)
-    mock_requests.delete.assert_called_once_with(sentinel.url, auth=None, headers={}, params={}, data=None)
+    mock_requests.delete.assert_called_once_with(
+        sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
+    )
 
 
 @pytest.mark.parametrize(
