@@ -277,14 +277,14 @@ request. This means that no data can be returned to the client as we could
 not find the requested resource as it had moved.
 
 The following exceptions inherit from `RedirectionError`:
-- MultipleChoices
-- MovedPermanently
-- Found
-- SeeOther
-- NotModified
-- UseProxy
-- TemporaryRedirect
-- PermanentRedirect
+- `MultipleChoices`
+- `MovedPermanently`
+- `Found`
+- `SeeOther`
+- `NotModified`
+- `UseProxy`
+- `TemporaryRedirect`
+- `PermanentRedirect`
 
 
 ### `ClientError`
@@ -292,48 +292,48 @@ The client was used incorrectly for contacting the API. This is due
 primarily to user input by passing invalid data to the API.
 
 The following exceptions inherit from `ClientError`:
-- BadRequest
-- Unauthorized
-- PaymentRequired
-- Forbidden
-- NotFound
-- MethodNotAllowed
-- NotAcceptable
-- ProxyAuthenticationRequired
-- RequestTimeout
-- Conflict
-- Gone
-- LengthRequired
-- PreconditionFailed
-- RequestEntityTooLarge
-- RequestUriTooLong
-- UnsupportedMediaType
-- RequestedRangeNotSatisfiable
-- ExpectationFailed
-- UnprocessableEntity
-- Locked
-- FailedDependency
-- UpgradeRequired
-- PreconditionRequired
-- TooManyRequests
-- RequestHeaderFieldsTooLarge
+- `BadRequest`
+- `Unauthorized`
+- `PaymentRequired`
+- `Forbidden`
+- `NotFound`
+- `MethodNotAllowed`
+- `NotAcceptable`
+- `ProxyAuthenticationRequired`
+- `RequestTimeout`
+- `Conflict`
+- `Gone`
+- `LengthRequired`
+- `PreconditionFailed`
+- `RequestEntityTooLarge`
+- `RequestUriTooLong`
+- `UnsupportedMediaType`
+- `RequestedRangeNotSatisfiable`
+- `ExpectationFailed`
+- `UnprocessableEntity`
+- `Locked`
+- `FailedDependency`
+- `UpgradeRequired`
+- `PreconditionRequired`
+- `TooManyRequests`
+- `RequestHeaderFieldsTooLarge`
 
 
 ### `ServerError`
 The API was unreachable when making the request.
 
 The following exceptions inherit from `ServerError`:
-- InternalServerError
-- NotImplemented
-- BadGateway
-- ServiceUnavailable
-- GatewayTimeout
-- HttpVersionNotSupported
-- VariantAlsoNegotiates
-- InsufficientStorage
-- LoopDetected
-- NotExtended
-- NetworkAuthenticationRequired
+- `InternalServerError`
+- `NotImplemented`
+- `BadGateway`
+- `ServiceUnavailable`
+- `GatewayTimeout`
+- `HttpVersionNotSupported`
+- `VariantAlsoNegotiates`
+- `InsufficientStorage`
+- `LoopDetected`
+- `NotExtended`
+- `NetworkAuthenticationRequired`
 
 
 ### `UnexpectedError`
