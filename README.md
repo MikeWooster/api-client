@@ -89,7 +89,7 @@ NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/tod
 
 ## BaseClient Interface
 The `BaseClient` provides the following public interface:
-* `create(self, endpoint: str, data: dict)`
+* `create(self, endpoint: str, data: dict, params: OptionalDict = None)`
 
    Delegate to POST method to send data and return response from endpoint.
 
