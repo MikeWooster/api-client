@@ -115,10 +115,10 @@ class BaseClient:
     def get_default_username_password_authentication(self) -> Optional[tuple]:
         return self._default_username_password_authentication
 
-    def create(self, endpoint: str, data: dict):
+    def create(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data and return response data from POST endpoint."""
         LOG.info("POST %s with %s", endpoint, data)
-        return self._make_request(requests.post, endpoint, data=data)
+        return self._make_request(requests.post, endpoint, data=data, params=params)
 
     def read(self, endpoint: str, params: OptionalDict = None):
         """Return response data from GET endpoint."""

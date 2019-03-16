@@ -143,6 +143,15 @@ def test_create_method_success(mock_requests):
 
 
 @patch("apiclient.client.requests")
+def test_create_method_with_params(mock_requests):
+    mock_requests.post.return_value.status_code = 201
+    client.create(sentinel.url, data={"foo": "bar"}, params={"query": "foo"})
+    mock_requests.post.assert_called_once_with(
+        sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={"query": "foo"}, timeout=10.0
+    )
+
+
+@patch("apiclient.client.requests")
 def test_read_method_success(mock_requests):
     mock_requests.get.return_value.status_code = 200
     client.read(sentinel.url)
