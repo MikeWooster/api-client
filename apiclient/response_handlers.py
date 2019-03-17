@@ -5,7 +5,7 @@ from xml.etree import ElementTree
 import yaml
 from requests import Response
 
-from apiclient.exceptions import UnexpectedError
+from apiclient.exceptions import ResponseParseError
 
 LOG = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class JsonResponseHandler(BaseResponseHandler):
             response_json = response.json()
         except JSONDecodeError as error:
             LOG.error("Unable to decode response data to json. data=%s", response.text)
-            raise UnexpectedError(
+            raise ResponseParseError(
                 f"Unable to decode response data to json. data='{response.text}'"
             ) from error
         return response_json
@@ -50,7 +50,9 @@ class XmlResponseHandler(BaseResponseHandler):
             xml_element = ElementTree.fromstring(response.text)
         except ElementTree.ParseError as error:
             LOG.error("Unable to parse response data to xml. data=%s", response.text)
-            raise UnexpectedError(f"Unable to parse response data to xml. data='{response.text}'") from error
+            raise ResponseParseError(
+                f"Unable to parse response data to xml. data='{response.text}'"
+            ) from error
         return xml_element
 
 
@@ -63,7 +65,7 @@ class YamlResponseHandler(BaseResponseHandler):
             response_yaml = yaml.load(response.text)
         except yaml.YAMLError as error:
             LOG.error("Unable to parse response data to yaml. data=%s", response.text)
-            raise UnexpectedError(
+            raise ResponseParseError(
                 f"Unable to parse response data to yaml. data='{response.text}'"
             ) from error
         return response_yaml

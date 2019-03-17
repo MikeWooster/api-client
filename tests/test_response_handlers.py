@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 import pytest
 from requests import Response
 
-from apiclient.exceptions import UnexpectedError
+from apiclient.exceptions import ResponseParseError
 from apiclient.response_handlers import (
     BaseResponseHandler,
     JsonResponseHandler,
@@ -56,9 +56,9 @@ class TestJsonResponseHandler:
         data = self.handler.get_request_data(response)
         assert data == {"foo": "bar"}
 
-    def test_bad_json_raises_unexpected_error(self):
+    def test_bad_json_raises_response_parse_error(self):
         response = build_response(data="foo")
-        with pytest.raises(UnexpectedError) as exc_info:
+        with pytest.raises(ResponseParseError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to decode response data to json. data='foo'"
 
@@ -74,9 +74,9 @@ class TestXmlResponseHandler:
         assert data[0].tag == "title"
         assert data[0].text == "Test Title"
 
-    def test_bad_xml_raises_unexpected_error(self):
+    def test_bad_xml_raises_response_parse_error(self):
         response = build_response(data="foo")
-        with pytest.raises(UnexpectedError) as exc_info:
+        with pytest.raises(ResponseParseError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to xml. data='foo'"
 
@@ -95,8 +95,8 @@ class TestYamlResponseHandler:
         data = self.handler.get_request_data(response)
         assert data == {"a": 1, "b": {"c": 2, "d": 3}}
 
-    def test_bad_yaml_raises_unexpected_error(self):
+    def test_bad_yaml_raises_response_parse_error(self):
         response = build_response(data="foo:    bar:   2")
-        with pytest.raises(UnexpectedError) as exc_info:
+        with pytest.raises(ResponseParseError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to yaml. data='foo:    bar:   2'"
