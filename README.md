@@ -266,80 +266,40 @@ Formatter that converts the data into a json format and adds the
 
 ## Exceptions
 
-All exceptions raised as part of the apiclient inherit from `APIClientError`.
-In order to comply with REST API standards, exceptions have been split into a granular
-level, allowing the user to map direct exceptions easily.  Exceptions have been split
-into the following groups.
+The exception handling for `api-client` has been designed in a way so that all exceptions inherit from
+one base exception type: `APIClientError`.  From there, the exceptions have been broken down into the
+following categories:
 
-### `RedirectionError`
-A redirection status code was returned as a final code when making the
+### `ResponseParseError`
+
+Something went wrong when trying to parse the successful response into the defined format.  This could be due
+to a misuse of the ResponseHandler, i.e. configuring the client with an `XmlResponseHandler` instead of
+a `JsonResponseHandler`
+
+### `APIRequestError`
+
+Something went wrong when making the request.  These are broken down further into the following categories to provide
+greater granularity and control.
+
+#### `RedirectionError`
+A redirection status code (3xx) was returned as a final code when making the
 request. This means that no data can be returned to the client as we could
 not find the requested resource as it had moved.
 
-The following exceptions inherit from `RedirectionError`:
-- `MultipleChoices`
-- `MovedPermanently`
-- `Found`
-- `SeeOther`
-- `NotModified`
-- `UseProxy`
-- `TemporaryRedirect`
-- `PermanentRedirect`
-
 
 ### `ClientError`
-The client was used incorrectly for contacting the API. This is due
-primarily to user input by passing invalid data to the API.
-
-The following exceptions inherit from `ClientError`:
-- `BadRequest`
-- `Unauthorized`
-- `PaymentRequired`
-- `Forbidden`
-- `NotFound`
-- `MethodNotAllowed`
-- `NotAcceptable`
-- `ProxyAuthenticationRequired`
-- `RequestTimeout`
-- `Conflict`
-- `Gone`
-- `LengthRequired`
-- `PreconditionFailed`
-- `RequestEntityTooLarge`
-- `RequestUriTooLong`
-- `UnsupportedMediaType`
-- `RequestedRangeNotSatisfiable`
-- `ExpectationFailed`
-- `UnprocessableEntity`
-- `Locked`
-- `FailedDependency`
-- `UpgradeRequired`
-- `PreconditionRequired`
-- `TooManyRequests`
-- `RequestHeaderFieldsTooLarge`
+A clienterror status code (4xx) was returned when contacting the API. The most common cause of
+these errors is misuse of the client, i.e. sending bad data to the API.
 
 
 ### `ServerError`
-The API was unreachable when making the request.
-
-The following exceptions inherit from `ServerError`:
-- `InternalServerError`
-- `NotImplemented`
-- `BadGateway`
-- `ServiceUnavailable`
-- `GatewayTimeout`
-- `HttpVersionNotSupported`
-- `VariantAlsoNegotiates`
-- `InsufficientStorage`
-- `LoopDetected`
-- `NotExtended`
-- `NetworkAuthenticationRequired`
+The API was unreachable when making the request.  I.e. a 5xx status code.
 
 
 ### `UnexpectedError`
-An unexpected error occurred when using the client.  This will most likely
-be the result of another exception being raised.  If possible, the original
-exception will be indicated as the causing exception of this error.
+An unexpected error occurred when using the client.  This will typically happen when attempting
+to make the request, for example, the client never receives a response.  It can also occur to
+unexpected status codes (>= 600).
 
 
 ## Endpoints

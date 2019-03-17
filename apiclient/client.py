@@ -1,5 +1,4 @@
 import logging
-from http import HTTPStatus
 from typing import Callable, Optional, Type
 
 import requests
@@ -12,55 +11,6 @@ from apiclient.response_handlers import BaseResponseHandler
 from apiclient.utils.typing import OptionalDict
 
 LOG = logging.getLogger(__name__)
-
-
-# Maps status codes to exceptions.
-EXCEPTION_MAP = {
-    HTTPStatus.MULTIPLE_CHOICES: exceptions.MultipleChoices,
-    HTTPStatus.MOVED_PERMANENTLY: exceptions.MovedPermanently,
-    HTTPStatus.FOUND: exceptions.Found,
-    HTTPStatus.SEE_OTHER: exceptions.SeeOther,
-    HTTPStatus.NOT_MODIFIED: exceptions.NotModified,
-    HTTPStatus.USE_PROXY: exceptions.UseProxy,
-    HTTPStatus.TEMPORARY_REDIRECT: exceptions.TemporaryRedirect,
-    HTTPStatus.PERMANENT_REDIRECT: exceptions.PermanentRedirect,
-    HTTPStatus.BAD_REQUEST: exceptions.BadRequest,
-    HTTPStatus.UNAUTHORIZED: exceptions.Unauthorized,
-    HTTPStatus.PAYMENT_REQUIRED: exceptions.PaymentRequired,
-    HTTPStatus.FORBIDDEN: exceptions.Forbidden,
-    HTTPStatus.NOT_FOUND: exceptions.NotFound,
-    HTTPStatus.NOT_ACCEPTABLE: exceptions.NotAcceptable,
-    HTTPStatus.PROXY_AUTHENTICATION_REQUIRED: exceptions.ProxyAuthenticationRequired,
-    HTTPStatus.REQUEST_TIMEOUT: exceptions.RequestTimeout,
-    HTTPStatus.CONFLICT: exceptions.Conflict,
-    HTTPStatus.GONE: exceptions.Gone,
-    HTTPStatus.LENGTH_REQUIRED: exceptions.LengthRequired,
-    HTTPStatus.PRECONDITION_FAILED: exceptions.PreconditionFailed,
-    HTTPStatus.REQUEST_ENTITY_TOO_LARGE: exceptions.RequestEntityTooLarge,
-    HTTPStatus.REQUEST_URI_TOO_LONG: exceptions.RequestUriTooLong,
-    HTTPStatus.UNSUPPORTED_MEDIA_TYPE: exceptions.UnsupportedMediaType,
-    HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE: exceptions.RequestedRangeNotSatisfiable,
-    HTTPStatus.EXPECTATION_FAILED: exceptions.ExpectationFailed,
-    HTTPStatus.UNPROCESSABLE_ENTITY: exceptions.UnprocessableEntity,
-    HTTPStatus.LOCKED: exceptions.Locked,
-    HTTPStatus.FAILED_DEPENDENCY: exceptions.FailedDependency,
-    HTTPStatus.UPGRADE_REQUIRED: exceptions.UpgradeRequired,
-    HTTPStatus.PRECONDITION_REQUIRED: exceptions.PreconditionRequired,
-    HTTPStatus.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
-    HTTPStatus.REQUEST_HEADER_FIELDS_TOO_LARGE: exceptions.RequestHeaderFieldsTooLarge,
-    HTTPStatus.INTERNAL_SERVER_ERROR: exceptions.InternalServerError,
-    HTTPStatus.NOT_IMPLEMENTED: exceptions.NotImplemented,
-    HTTPStatus.BAD_GATEWAY: exceptions.BadGateway,
-    HTTPStatus.SERVICE_UNAVAILABLE: exceptions.ServiceUnavailable,
-    HTTPStatus.GATEWAY_TIMEOUT: exceptions.GatewayTimeout,
-    HTTPStatus.HTTP_VERSION_NOT_SUPPORTED: exceptions.HttpVersionNotSupported,
-    HTTPStatus.VARIANT_ALSO_NEGOTIATES: exceptions.VariantAlsoNegotiates,
-    HTTPStatus.INSUFFICIENT_STORAGE: exceptions.InsufficientStorage,
-    HTTPStatus.LOOP_DETECTED: exceptions.LoopDetected,
-    HTTPStatus.NOT_EXTENDED: exceptions.NotExtended,
-    HTTPStatus.NETWORK_AUTHENTICATION_REQUIRED: exceptions.NetworkAuthenticationRequired,
-}
-
 
 # Timeout in seconds (float)
 DEFAULT_TIMEOUT = 10.0
@@ -195,9 +145,7 @@ class BaseClient:
 
     def _handle_bad_response(self, response: Response):
         """Convert the error into an understandable client exception."""
-        exception_class = self.get_exception_map().get(
-            response.status_code, self._get_fallback_exception(response.status_code)
-        )
+        exception_class = self._get_exception_class(response.status_code)
         logger = self._get_logger_from_exception_type(exception_class)
         logger(
             "%s Error: %s for url: %s. data=%s",
@@ -206,21 +154,17 @@ class BaseClient:
             response.url,
             response.text,
         )
-        raise exception_class(f"{response.status_code} Error: {response.reason} for url: {response.url}")
-
-    def get_exception_map(self) -> dict:
-        """Map status codes to exceptions.
-
-        Override method to add, remove or customize extensions.
-        """
-        return EXCEPTION_MAP
+        raise exception_class(
+            message=f"{response.status_code} Error: {response.reason} for url: {response.url}",
+            status_code=response.status_code,
+        )
 
     @staticmethod
-    def _get_fallback_exception(status_code: int) -> Type[exceptions.APIClientError]:
+    def _get_exception_class(status_code: int) -> Type[exceptions.APIRequestError]:
         if 300 <= status_code < 400:
             exception_class = exceptions.RedirectionError
         elif 400 <= status_code < 500:
-            exception_class = exceptions.BadRequest
+            exception_class = exceptions.ClientError
         elif 500 <= status_code < 600:
             exception_class = exceptions.ServerError
         else:
