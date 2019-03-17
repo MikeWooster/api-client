@@ -4,7 +4,6 @@ from unittest.mock import sentinel
 from xml.etree import ElementTree
 
 import pytest
-import yaml
 from requests import Response
 
 from apiclient.exceptions import UnexpectedError

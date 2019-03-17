@@ -1,0 +1,4 @@
+recursive-include apiclient *
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
