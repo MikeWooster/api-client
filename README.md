@@ -17,6 +17,7 @@ pip install api-client
 ```
 from apiclient import BaseClient
 from apiclient.decorates import endpoint
+from apiclient.retrying import retry_request
 
 
 # Define endpoints, using the provided decorator.
@@ -32,6 +33,7 @@ class JSONPlaceholderClient(BaseClient):
     def get_all_todos(self) -> dict:
         return self.read(Endpoint.todos)
 
+    @retry_request
     def get_todo(self, todo_id: int) -> dict:
         url = Endpoint.todo.format(id=todo_id)
         return self.read(url)
@@ -109,18 +111,38 @@ The `BaseClient` provides the following public interface:
 
    Delegate to DELETE method to remove resource located at endpoint.
 
-* `get_exception_map() -> dict`
-
-   If not overridden will use the default dictionary defined to map bad response
-   status codes into the relevant exceptions.  Users can customize the exceptions
-   raised by overriding this method.
-
 * `get_request_timeout() -> float`
 
    By default, all requests have been set to have a default timeout of 10.0 s.  This
    is to avoid the request waiting forever for a response, and is recommended
    to always be set to a value in production applications.  It is however possible to
    override this method to return the timeout required by your application.
+
+
+## Retrying
+
+To add some robustness to your client, the power of [tenacity](https://github.com/jd/tenacity)
+has been harnessed to add a `retry_request` decorator to the `apiclient` toolkit.
+
+This will retry any request which responds with a 5xx status_code (which is normally safe
+to do as this indicates something went wrong when trying to make the request), or when an
+`UnexpectedError` occurs when attempting to establish the connection.
+
+`retry_request` has been configured to retry for a maximum of 5 minutes, with an exponential
+backoff strategy.  For more complicated uses, the user can use tenacity themselves to create
+their own custom decorator.
+
+Usage:
+
+```
+from apiclient.retrying import retry_request
+
+class MyClient(BaseClient):
+
+    @retry_request
+    def retry_enabled_method():
+        ...
+```
 
 ## Authentication Methods
 Authentication methods provide a way in which you can customize the

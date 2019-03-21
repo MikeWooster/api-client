@@ -5,7 +5,8 @@ import setuptools
 
 application_dependencies = [
     "requests>=2.16",
-    "pyyaml"
+    "pyyaml",
+    "tenacity",
 ]
 prod_dependencies = []
 test_dependencies = [
