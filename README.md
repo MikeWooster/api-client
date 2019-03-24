@@ -17,7 +17,9 @@ pip install api-client
 ```
 from apiclient import BaseClient
 from apiclient.decorates import endpoint
+from apiclient.paginators import paginated
 from apiclient.retrying import retry_request
+
 
 
 # Define endpoints, using the provided decorator.
@@ -27,9 +29,17 @@ class Endpoint:
     todo = "todos/{id}"
 
 
+def get_next_page(response):
+    return {
+        "limit": response["limit"],
+        "offset": response["offset"] + response["limit"],
+    }
+
+
 # Extend the client for your API integration.
 class JSONPlaceholderClient(BaseClient):
 
+    @paginated(by_query_params=get_next_page)
     def get_all_todos(self) -> dict:
         return self.read(Endpoint.todos)
 
@@ -122,13 +132,13 @@ The `BaseClient` provides the following public interface:
 ## Retrying
 
 To add some robustness to your client, the power of [tenacity](https://github.com/jd/tenacity)
-has been harnessed to add a `retry_request` decorator to the `apiclient` toolkit.
+has been harnessed to add a `@retry_request` decorator to the `apiclient` toolkit.
 
 This will retry any request which responds with a 5xx status_code (which is normally safe
 to do as this indicates something went wrong when trying to make the request), or when an
 `UnexpectedError` occurs when attempting to establish the connection.
 
-`retry_request` has been configured to retry for a maximum of 5 minutes, with an exponential
+`@retry_request` has been configured to retry for a maximum of 5 minutes, with an exponential
 backoff strategy.  For more complicated uses, the user can use tenacity themselves to create
 their own custom decorator.
 
@@ -142,7 +152,48 @@ class MyClient(BaseClient):
     @retry_request
     def retry_enabled_method():
         ...
+
 ```
+
+## Pagination
+
+In order to support contacting pages that respond with multiple pages of data when making read requests,
+add a `@paginated` decorator to your client method.  `@paginated` can paginate the requests either where
+the pages are specified in the query parameters, or by modifying the url.
+
+Usage is simple in both cases; write a function that takes the response data and return the next page
+to fetch.  If the response is the last page, the function should return None or raise an error.
+
+Usage:
+
+```
+from apiclient.paginators import paginated
+
+
+def next_page_by_params(response):
+    # Function reads the response data and returns the query param
+    # that tells the next request to go to.
+    return {"next": response["pages"]["next"]
+
+
+def next_page_by_url(response):
+    # Function reads the response and returns the url as string
+    # where the next page of data lives.
+    return response["pages"]["next"]["url"]
+
+
+class MyClient(BaseClient):
+
+    @paginated(by_query_params=next_page_by_params)
+    def paginated_example_one():
+        ...
+
+    @paginated(by_url=next_page_by_url)
+    def paginated_example_two():
+        ...
+
+```
+
 
 ## Authentication Methods
 Authentication methods provide a way in which you can customize the
