@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 
 import pytest
 import vcr
@@ -16,3 +17,9 @@ api_client_vcr = vcr.VCR(
 def json_placeholder_cassette():
     with api_client_vcr.use_cassette("json_placeholder_cassette.yaml") as cassette:
         yield cassette
+
+
+@pytest.fixture
+def mock_requests():
+    with patch("apiclient.request_strategies.requests") as _mock_requests:
+        yield _mock_requests

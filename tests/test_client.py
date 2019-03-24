@@ -7,13 +7,16 @@ from apiclient.authentication_methods import NoAuthentication
 from apiclient.client import LOG as client_logger
 from apiclient.client import BaseClient
 from apiclient.exceptions import ClientError, RedirectionError, ServerError, UnexpectedError
-from apiclient.request_formatters import BaseRequestFormatter, JsonRequestFormatter
-from apiclient.response_handlers import BaseResponseHandler, JsonResponseHandler
-
-
-# Minimal client - no implementation
-class Client(BaseClient):
-    pass
+from apiclient.request_formatters import JsonRequestFormatter
+from apiclient.response_handlers import JsonResponseHandler
+from tests.helpers import (
+    MinimalClient,
+    MockRequestFormatter,
+    MockResponseHandler,
+    client_factory,
+    mock_request_formatter_call,
+    mock_response_handler_call,
+)
 
 
 # Real world api client with GET methods implemented.
@@ -29,38 +32,9 @@ class JSONPlaceholderClient(BaseClient):
         return self.read(url)
 
 
-mock_response_handler_call = Mock()
-mock_request_formatter_call = Mock()
-
-
-class MockResponseHandler(BaseResponseHandler):
-    """Mock class for testing."""
-
-    @staticmethod
-    def get_request_data(response):
-        mock_response_handler_call(response)
-        return response
-
-
-class MockRequestFormatter(BaseRequestFormatter):
-    """Mock class for testing."""
-
-    @classmethod
-    def format(cls, data: dict):
-        mock_request_formatter_call(data)
-        return data
-
-
-client = Client(
-    authentication_method=NoAuthentication(),
-    response_handler=MockResponseHandler,
-    request_formatter=MockRequestFormatter,
-)
-
-
 def test_client_initialization_with_invalid_authentication_method():
     with pytest.raises(RuntimeError) as exc_info:
-        Client(
+        MinimalClient(
             authentication_method=None,
             response_handler=MockResponseHandler,
             request_formatter=MockRequestFormatter,
@@ -71,7 +45,7 @@ def test_client_initialization_with_invalid_authentication_method():
 
 def test_client_initialization_with_invalid_response_handler():
     with pytest.raises(RuntimeError) as exc_info:
-        Client(
+        MinimalClient(
             authentication_method=NoAuthentication(),
             response_handler=None,
             request_formatter=MockRequestFormatter,
@@ -81,7 +55,7 @@ def test_client_initialization_with_invalid_response_handler():
 
 def test_client_initialization_with_invalid_requests_handler():
     with pytest.raises(RuntimeError) as exc_info:
-        Client(
+        MinimalClient(
             authentication_method=NoAuthentication(),
             response_handler=MockResponseHandler,
             request_formatter=None,
@@ -90,7 +64,7 @@ def test_client_initialization_with_invalid_requests_handler():
 
 
 def test_set_and_get_default_headers():
-    client = Client(
+    client = MinimalClient(
         authentication_method=NoAuthentication(),
         response_handler=MockResponseHandler,
         request_formatter=MockRequestFormatter,
@@ -104,7 +78,7 @@ def test_set_and_get_default_headers():
 
 
 def test_set_and_get_default_query_params():
-    client = Client(
+    client = MinimalClient(
         authentication_method=NoAuthentication(),
         response_handler=MockResponseHandler,
         request_formatter=MockRequestFormatter,
@@ -118,7 +92,7 @@ def test_set_and_get_default_query_params():
 
 
 def test_set_and_get_default_username_password_authentication():
-    client = Client(
+    client = MinimalClient(
         authentication_method=NoAuthentication(),
         response_handler=MockResponseHandler,
         request_formatter=MockRequestFormatter,
@@ -131,55 +105,55 @@ def test_set_and_get_default_username_password_authentication():
     assert client.get_default_username_password_authentication() == ("username", "morecomplicatedpassword")
 
 
-@patch("apiclient.client.requests")
+@patch("apiclient.request_strategies.requests")
 def test_create_method_success(mock_requests):
     mock_requests.post.return_value.status_code = 201
-    client.create(sentinel.url, data={"foo": "bar"})
+    client_factory().create(sentinel.url, data={"foo": "bar"})
     mock_requests.post.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
 
 
-@patch("apiclient.client.requests")
+@patch("apiclient.request_strategies.requests")
 def test_create_method_with_params(mock_requests):
     mock_requests.post.return_value.status_code = 201
-    client.create(sentinel.url, data={"foo": "bar"}, params={"query": "foo"})
+    client_factory().create(sentinel.url, data={"foo": "bar"}, params={"query": "foo"})
     mock_requests.post.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={"query": "foo"}, timeout=10.0
     )
 
 
-@patch("apiclient.client.requests")
+@patch("apiclient.request_strategies.requests")
 def test_read_method_success(mock_requests):
     mock_requests.get.return_value.status_code = 200
-    client.read(sentinel.url)
+    client_factory().read(sentinel.url)
     mock_requests.get.assert_called_once_with(
         sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
     )
 
 
-@patch("apiclient.client.requests")
+@patch("apiclient.request_strategies.requests")
 def test_replace_method_success(mock_requests):
     mock_requests.put.return_value.status_code = 200
-    client.replace(sentinel.url, data={"foo": "bar"})
+    client_factory().replace(sentinel.url, data={"foo": "bar"})
     mock_requests.put.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
 
 
-@patch("apiclient.client.requests")
+@patch("apiclient.request_strategies.requests")
 def test_update_method_success(mock_requests):
     mock_requests.patch.return_value.status_code = 200
-    client.update(sentinel.url, data={"foo": "bar"})
+    client_factory().update(sentinel.url, data={"foo": "bar"})
     mock_requests.patch.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
 
 
-@patch("apiclient.client.requests")
+@patch("apiclient.request_strategies.requests")
 def test_delete_method_success(mock_requests):
     mock_requests.delete.return_value.status_code = 200
-    client.delete(sentinel.url)
+    client_factory().delete(sentinel.url)
     mock_requests.delete.assert_called_once_with(
         sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
     )
@@ -188,11 +162,23 @@ def test_delete_method_success(mock_requests):
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (
+            client_factory().create,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.post",
+        ),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_make_request_error_raises_and_logs_unexpected_error(
@@ -211,11 +197,23 @@ def test_make_request_error_raises_and_logs_unexpected_error(
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (
+            client_factory().create,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.post",
+        ),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_server_error_raises_and_logs_client_server_error(
@@ -238,11 +236,23 @@ def test_server_error_raises_and_logs_client_server_error(
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (
+            client_factory().create,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.post",
+        ),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_not_modified_response_raises_and_logs_client_redirection_error(
@@ -267,11 +277,23 @@ def test_not_modified_response_raises_and_logs_client_redirection_error(
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (
+            client_factory().create,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.post",
+        ),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_not_found_response_raises_and_logs_client_bad_request_error(
@@ -296,11 +318,23 @@ def test_not_found_response_raises_and_logs_client_bad_request_error(
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (
+            client_factory().create,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.post",
+        ),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_unexpected_status_code_response_raises_and_logs_unexpected_error(
@@ -326,10 +360,18 @@ def test_unexpected_status_code_response_raises_and_logs_unexpected_error(
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_query_params_are_updated_and_not_overwritten(client_method, client_args, patch_methodname):
@@ -348,11 +390,23 @@ def test_query_params_are_updated_and_not_overwritten(client_method, client_args
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client.create, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.post"),
-        (client.read, (sentinel.url,), "apiclient.client.requests.get"),
-        (client.replace, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.put"),
-        (client.update, (sentinel.url, {"foo": "bar"}), "apiclient.client.requests.patch"),
-        (client.delete, (sentinel.url,), "apiclient.client.requests.delete"),
+        (
+            client_factory().create,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.post",
+        ),
+        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (
+            client_factory().replace,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.put",
+        ),
+        (
+            client_factory().update,
+            (sentinel.url, {"foo": "bar"}),
+            "apiclient.request_strategies.requests.patch",
+        ),
+        (client_factory().delete, (sentinel.url,), "apiclient.request_strategies.requests.delete"),
     ],
 )
 def test_delegates_to_response_handler(client_method, client_args, patch_methodname):
@@ -370,9 +424,9 @@ def test_delegates_to_response_handler(client_method, client_args, patch_methodn
 @pytest.mark.parametrize(
     "client_method,url,patch_methodname",
     [
-        (client.create, sentinel.url, "apiclient.client.requests.post"),
-        (client.replace, sentinel.url, "apiclient.client.requests.put"),
-        (client.update, sentinel.url, "apiclient.client.requests.patch"),
+        (client_factory().create, sentinel.url, "apiclient.request_strategies.requests.post"),
+        (client_factory().replace, sentinel.url, "apiclient.request_strategies.requests.put"),
+        (client_factory().update, sentinel.url, "apiclient.request_strategies.requests.patch"),
     ],
 )
 def test_data_parsing_delegates_to_request_formatter(client_method, url, patch_methodname):
@@ -403,3 +457,10 @@ def test_read_real_world_api(json_placeholder_cassette):
         "userId": 3,
     }
     assert client.get_todo(45) == expected_todo
+
+
+def test_setting_incorrect_request_strategy_raises_runtime_error():
+    client = client_factory()
+    with pytest.raises(RuntimeError) as exc_info:
+        client.set_request_strategy("not a strategy")
+    assert str(exc_info.value) == "provided request_strategy must be an instance of BaseRequestStrategy."

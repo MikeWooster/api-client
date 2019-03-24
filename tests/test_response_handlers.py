@@ -1,10 +1,8 @@
 import json
-from io import BytesIO
 from unittest.mock import sentinel
 from xml.etree import ElementTree
 
 import pytest
-from requests import Response
 
 from apiclient.exceptions import ResponseParseError
 from apiclient.response_handlers import (
@@ -14,22 +12,7 @@ from apiclient.response_handlers import (
     XmlResponseHandler,
     YamlResponseHandler,
 )
-
-
-def build_response(data) -> Response:
-    """Return a requests.Response object with the data set as the content."""
-    response = Response()
-    response.status_code = 200
-    response.headers = {
-        "Connection": "keep-alive",
-        "Content-Encoding": "gzip",
-        "Content-Type": "application/json; charset=utf-8",
-    }
-    response.encoding = "utf-8"
-    response.raw = BytesIO(bytes(data, encoding="utf-8"))
-    response.reason = "OK"
-    response.url = "https://jsonplaceholder.typicode.com/todos"
-    return response
+from tests.helpers import build_response
 
 
 class TestBaseResponseHandler:

@@ -1,12 +1,11 @@
+import copy
 import logging
-from typing import Callable, Optional, Type
+from typing import Optional, Type
 
-import requests
-from requests import Response
-
-from apiclient import exceptions
 from apiclient.authentication_methods import BaseAuthenticationMethod
+from apiclient.interface import IClient
 from apiclient.request_formatters import BaseRequestFormatter
+from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler
 from apiclient.utils.typing import OptionalDict
 
@@ -16,36 +15,57 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10.0
 
 
-class BaseClient:
+class BaseClient(IClient):
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod,
         response_handler: Type[BaseResponseHandler],
         request_formatter: Type[BaseRequestFormatter],
     ):
-        self._authentication_method = authentication_method
-        self._response_handler = response_handler
-        self._request_formatter = request_formatter
-        self._run_initialization_checks()
-
         # Set default values
         self._default_headers = {}
         self._default_query_params = {}
         self._default_username_password_authentication = None
 
-        # Allow injected dependencies to alter client.
-        self._authentication_method.set_client(self)
-        self._request_formatter.set_client(self)
+        # Set client strategies
+        self.set_authentication_method(authentication_method)
+        self.set_response_handler(response_handler)
+        self.set_request_formatter(request_formatter)
+        self.set_request_strategy(RequestStrategy())
 
-    def _run_initialization_checks(self):
-        if not isinstance(self._authentication_method, BaseAuthenticationMethod):
+    def set_authentication_method(self, authentication_method: BaseAuthenticationMethod):
+        if not isinstance(authentication_method, BaseAuthenticationMethod):
             raise RuntimeError(
                 "provided authentication_method must be an instance of BaseAuthenticationMethod."
             )
-        if not (self._response_handler and issubclass(self._response_handler, BaseResponseHandler)):
+        self._authentication_method = authentication_method
+        self._authentication_method.set_client(self)
+
+    def get_response_handler(self) -> Type[BaseResponseHandler]:
+        return self._response_handler
+
+    def set_response_handler(self, response_handler: Type[BaseResponseHandler]):
+        if not (response_handler and issubclass(response_handler, BaseResponseHandler)):
             raise RuntimeError("provided response_handler must be a subclass of BaseResponseHandler.")
-        if not (self._request_formatter and issubclass(self._request_formatter, BaseRequestFormatter)):
+        self._response_handler = response_handler
+
+    def get_request_formatter(self) -> Type[BaseRequestFormatter]:
+        return self._request_formatter
+
+    def set_request_formatter(self, request_formatter: Type[BaseRequestFormatter]):
+        if not (request_formatter and issubclass(request_formatter, BaseRequestFormatter)):
             raise RuntimeError("provided request_formatter must be a subclass of BaseRequestFormatter.")
+        self._request_formatter = request_formatter
+        self._request_formatter.set_client(self)
+
+    def get_request_strategy(self) -> BaseRequestStrategy:
+        return self._request_strategy
+
+    def set_request_strategy(self, request_strategy: BaseRequestStrategy):
+        if not isinstance(request_strategy, BaseRequestStrategy):
+            raise RuntimeError("provided request_strategy must be an instance of BaseRequestStrategy.")
+        self._request_strategy = request_strategy
+        self._request_strategy.set_client(self)
 
     def set_default_headers(self, headers: dict):
         self._default_headers = headers
@@ -65,114 +85,35 @@ class BaseClient:
     def get_default_username_password_authentication(self) -> Optional[tuple]:
         return self._default_username_password_authentication
 
-    def create(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Send data and return response data from POST endpoint."""
-        LOG.info("POST %s with %s", endpoint, data)
-        return self._make_request(requests.post, endpoint, data=data, params=params)
-
-    def read(self, endpoint: str, params: OptionalDict = None):
-        """Return response data from GET endpoint."""
-        LOG.info("GET %s", endpoint)
-        return self._make_request(requests.get, endpoint, params=params)
-
-    def replace(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Send data to overwrite resource and return response data from PUT endpoint."""
-        LOG.info("PUT %s with %s", endpoint, data)
-        return self._make_request(requests.put, endpoint, data=data, params=params)
-
-    def update(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Send data to update resource and return response data from PATCH endpoint."""
-        LOG.info("PATCH %s with %s", endpoint, data)
-        return self._make_request(requests.patch, endpoint, data=data, params=params)
-
-    def delete(self, endpoint: str, params: OptionalDict = None):
-        """Remove resource with DELETE endpoint."""
-        LOG.info("DELETE %s", endpoint)
-        return self._make_request(requests.delete, endpoint, params=params)
-
-    def _make_request(
-        self,
-        request_method: Callable,
-        endpoint: str,
-        params: OptionalDict = None,
-        headers: OptionalDict = None,
-        data: OptionalDict = None,
-        **kwargs,
-    ) -> Response:
-        """Make the request with the given method.
-
-        Delegates response parsing to the response handler.
-        """
-        try:
-            response = request_method(
-                endpoint,
-                params=self._get_request_params(params),
-                headers=self._get_request_headers(headers),
-                auth=self.get_default_username_password_authentication(),
-                data=self._request_formatter.format(data),
-                timeout=self.get_request_timeout(),
-                **kwargs,
-            )
-        except Exception as error:
-            LOG.error(f"An error occurred when contacting %s", endpoint, exc_info=error)
-            raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
-        else:
-            self._check_response(response)
-        return self._response_handler.get_request_data(response)
-
-    def _get_request_params(self, params: OptionalDict) -> dict:
-        """Return dictionary with any additional authentication query parameters."""
-        if params is None:
-            params = {}
-        params.update(self.get_default_query_params())
-        return params
-
-    def _get_request_headers(self, headers: OptionalDict) -> dict:
-        """Return dictionary with any additinoal authentication headers."""
-        if headers is None:
-            headers = {}
-        headers.update(self.get_default_headers())
-        return headers
-
     def get_request_timeout(self) -> float:
         """Return the number of seconds before the request times out."""
         return DEFAULT_TIMEOUT
 
-    def _check_response(self, response: Response):
-        """Raise a custom exception if the response is not OK."""
-        if response.status_code < 200 or response.status_code >= 300:
-            self._handle_bad_response(response)
+    def clone(self):
+        """Enable Prototype pattern on client."""
+        return copy.deepcopy(self)
 
-    def _handle_bad_response(self, response: Response):
-        """Convert the error into an understandable client exception."""
-        exception_class = self._get_exception_class(response.status_code)
-        logger = self._get_logger_from_exception_type(exception_class)
-        logger(
-            "%s Error: %s for url: %s. data=%s",
-            response.status_code,
-            response.reason,
-            response.url,
-            response.text,
-        )
-        raise exception_class(
-            message=f"{response.status_code} Error: {response.reason} for url: {response.url}",
-            status_code=response.status_code,
-        )
+    def create(self, endpoint: str, data: dict, params: OptionalDict = None):
+        """Send data and return response data from POST endpoint."""
+        LOG.info("POST %s with %s", endpoint, data)
+        return self.get_request_strategy().create(endpoint, data=data, params=params)
 
-    @staticmethod
-    def _get_exception_class(status_code: int) -> Type[exceptions.APIRequestError]:
-        if 300 <= status_code < 400:
-            exception_class = exceptions.RedirectionError
-        elif 400 <= status_code < 500:
-            exception_class = exceptions.ClientError
-        elif 500 <= status_code < 600:
-            exception_class = exceptions.ServerError
-        else:
-            exception_class = exceptions.UnexpectedError
-        return exception_class
+    def read(self, endpoint: str, params: OptionalDict = None):
+        """Return response data from GET endpoint."""
+        LOG.info("GET %s", endpoint)
+        return self.get_request_strategy().read(endpoint, params=params)
 
-    @staticmethod
-    def _get_logger_from_exception_type(exception_class) -> LOG:
-        if issubclass(exception_class, exceptions.ServerError):
-            return LOG.warning
-        return LOG.error
+    def replace(self, endpoint: str, data: dict, params: OptionalDict = None):
+        """Send data to overwrite resource and return response data from PUT endpoint."""
+        LOG.info("PUT %s with %s", endpoint, data)
+        return self.get_request_strategy().replace(endpoint, data=data, params=params)
+
+    def update(self, endpoint: str, data: dict, params: OptionalDict = None):
+        """Send data to update resource and return response data from PATCH endpoint."""
+        LOG.info("PATCH %s with %s", endpoint, data)
+        return self.get_request_strategy().update(endpoint, data=data, params=params)
+
+    def delete(self, endpoint: str, params: OptionalDict = None):
+        """Remove resource with DELETE endpoint."""
+        LOG.info("DELETE %s", endpoint)
+        return self.get_request_strategy().delete(endpoint, params=params)
