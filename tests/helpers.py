@@ -11,6 +11,7 @@ from apiclient.response_handlers import BaseResponseHandler, JsonResponseHandler
 
 mock_response_handler_call = Mock()
 mock_request_formatter_call = Mock()
+mock_get_request_formatter_headers_call = Mock()
 
 
 class MinimalClient(BaseClient):
@@ -30,6 +31,11 @@ class MockResponseHandler(BaseResponseHandler):
 
 class MockRequestFormatter(BaseRequestFormatter):
     """Mock class for testing."""
+
+    @classmethod
+    def get_headers(cls):
+        mock_get_request_formatter_headers_call()
+        return {}
 
     @classmethod
     def format(cls, data: dict):

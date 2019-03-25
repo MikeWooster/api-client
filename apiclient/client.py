@@ -39,7 +39,6 @@ class BaseClient(IClient):
                 "provided authentication_method must be an instance of BaseAuthenticationMethod."
             )
         self._authentication_method = authentication_method
-        self._authentication_method.set_client(self)
 
     def get_response_handler(self) -> Type[BaseResponseHandler]:
         return self._response_handler
@@ -56,7 +55,6 @@ class BaseClient(IClient):
         if not (request_formatter and issubclass(request_formatter, BaseRequestFormatter)):
             raise RuntimeError("provided request_formatter must be a subclass of BaseRequestFormatter.")
         self._request_formatter = request_formatter
-        self._request_formatter.set_client(self)
 
     def get_request_strategy(self) -> BaseRequestStrategy:
         return self._request_strategy
@@ -67,23 +65,17 @@ class BaseClient(IClient):
         self._request_strategy = request_strategy
         self._request_strategy.set_client(self)
 
-    def set_default_headers(self, headers: dict):
-        self._default_headers = headers
-
     def get_default_headers(self) -> dict:
-        return self._default_headers
-
-    def set_default_query_params(self, params: dict):
-        self._default_query_params = params
+        headers = {}
+        for strategy in (self._authentication_method, self._request_formatter):
+            headers.update(strategy.get_headers())
+        return headers
 
     def get_default_query_params(self) -> dict:
-        return self._default_query_params
-
-    def set_default_username_password_authentication(self, auth: tuple):
-        self._default_username_password_authentication = auth
+        return self._authentication_method.get_query_params()
 
     def get_default_username_password_authentication(self) -> Optional[tuple]:
-        return self._default_username_password_authentication
+        return self._authentication_method.get_username_password_authentication()
 
     def get_request_timeout(self) -> float:
         """Return the number of seconds before the request times out."""

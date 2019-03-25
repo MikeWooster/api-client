@@ -4,34 +4,14 @@ from apiclient.utils.typing import BasicAuthType, OptionalStr
 
 
 class BaseAuthenticationMethod:
-    def set_client(self, client):
-        self._client = client
-        self.add_authentication_headers()
-        self.add_authentication_params()
-        self.add_username_password_authentication()
-
-    def get_authentication_headers(self) -> dict:
+    def get_headers(self) -> dict:
         return {}
 
-    def add_authentication_headers(self):
-        headers = self._client.get_default_headers()
-        headers.update(self.get_authentication_headers())
-        self._client.set_default_headers(headers)
-
-    def get_authentication_params(self) -> dict:
+    def get_query_params(self) -> dict:
         return {}
-
-    def add_authentication_params(self):
-        params = self._client.get_default_query_params()
-        params.update(self.get_authentication_params())
-        self._client.set_default_query_params(params)
 
     def get_username_password_authentication(self) -> Optional[BasicAuthType]:
         return None
-
-    def add_username_password_authentication(self):
-        auth = self.get_username_password_authentication()
-        self._client.set_default_username_password_authentication(auth)
 
 
 class NoAuthentication(BaseAuthenticationMethod):
@@ -47,7 +27,7 @@ class QueryParameterAuthentication(BaseAuthenticationMethod):
         self._parameter = parameter
         self._token = token
 
-    def get_authentication_params(self):
+    def get_query_params(self):
         return {self._parameter: self._token}
 
 
@@ -63,7 +43,7 @@ class HeaderAuthentication(BaseAuthenticationMethod):
         self._parameter = parameter
         self._scheme = scheme
 
-    def get_authentication_headers(self):
+    def get_headers(self):
         if self._scheme:
             return {self._parameter: f"{self._scheme} {self._token}"}
         else:
