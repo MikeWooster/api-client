@@ -23,19 +23,10 @@ class IClient:  # pragma: no cover
     def set_request_strategy(self, *args, **kwargs):
         raise NotImplementedError
 
-    def set_default_headers(self, *args, **kwargs):
-        raise NotImplementedError
-
     def get_default_headers(self):
         raise NotImplementedError
 
-    def set_default_query_params(self, *args, **kwargs):
-        raise NotImplementedError
-
     def get_default_query_params(self):
-        raise NotImplementedError
-
-    def set_default_username_password_authentication(self, *args, **kwargs):
         raise NotImplementedError
 
     def get_default_username_password_authentication(self):

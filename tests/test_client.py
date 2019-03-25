@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch, sentinel
 
 import pytest
 
-from apiclient.authentication_methods import NoAuthentication
+from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.client import LOG as client_logger
 from apiclient.client import BaseClient
 from apiclient.exceptions import ClientError, RedirectionError, ServerError, UnexpectedError
@@ -14,6 +14,7 @@ from tests.helpers import (
     MockRequestFormatter,
     MockResponseHandler,
     client_factory,
+    mock_get_request_formatter_headers_call,
     mock_request_formatter_call,
     mock_response_handler_call,
 )
@@ -61,48 +62,6 @@ def test_client_initialization_with_invalid_requests_handler():
             request_formatter=None,
         )
     assert str(exc_info.value) == "provided request_formatter must be a subclass of BaseRequestFormatter."
-
-
-def test_set_and_get_default_headers():
-    client = MinimalClient(
-        authentication_method=NoAuthentication(),
-        response_handler=MockResponseHandler,
-        request_formatter=MockRequestFormatter,
-    )
-    assert client.get_default_headers() == {}
-    client.set_default_headers({"first": "header"})
-    assert client.get_default_headers() == {"first": "header"}
-    # Setting the default headers should overwrite the original
-    client.set_default_headers({"second": "header"})
-    assert client.get_default_headers() == {"second": "header"}
-
-
-def test_set_and_get_default_query_params():
-    client = MinimalClient(
-        authentication_method=NoAuthentication(),
-        response_handler=MockResponseHandler,
-        request_formatter=MockRequestFormatter,
-    )
-    assert client.get_default_query_params() == {}
-    client.set_default_query_params({"first": "header"})
-    assert client.get_default_query_params() == {"first": "header"}
-    # Setting the default query params should overwrite the original
-    client.set_default_query_params({"second": "header"})
-    assert client.get_default_query_params() == {"second": "header"}
-
-
-def test_set_and_get_default_username_password_authentication():
-    client = MinimalClient(
-        authentication_method=NoAuthentication(),
-        response_handler=MockResponseHandler,
-        request_formatter=MockRequestFormatter,
-    )
-    assert client.get_default_username_password_authentication() is None
-    client.set_default_username_password_authentication(("username", "password"))
-    assert client.get_default_username_password_authentication() == ("username", "password")
-    # Setting the default username password should overwrite the original
-    client.set_default_username_password_authentication(("username", "morecomplicatedpassword"))
-    assert client.get_default_username_password_authentication() == ("username", "morecomplicatedpassword")
 
 
 @patch("apiclient.request_strategies.requests")
@@ -157,6 +116,52 @@ def test_delete_method_success(mock_requests):
     mock_requests.delete.assert_called_once_with(
         sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
     )
+
+
+@patch("apiclient.request_strategies.requests")
+def test_authentication_methods_are_called(mock_requests):
+    mock_requests.get.return_value.status_code = 200
+    mock_authentication = Mock(spec=BaseAuthenticationMethod)
+    mock_authentication.get_headers.return_value = {sentinel.key: sentinel.value}
+    mock_authentication.get_query_params.return_value = {sentinel.pkey: sentinel.pvalue}
+    mock_authentication.get_username_password_authentication.return_value = (sentinel.uname, sentinel.pwd)
+
+    client = MinimalClient(
+        authentication_method=mock_authentication,
+        response_handler=MockResponseHandler,
+        request_formatter=MockRequestFormatter,
+    )
+    client.read(sentinel.url)
+
+    mock_requests.get.assert_called_once_with(
+        sentinel.url,
+        auth=(sentinel.uname, sentinel.pwd),
+        headers={sentinel.key: sentinel.value},
+        params={sentinel.pkey: sentinel.pvalue},
+        data=None,
+        timeout=10.0,
+    )
+    assert mock_authentication.get_headers.call_count == 1
+    assert mock_authentication.get_query_params.call_count == 1
+    assert mock_authentication.get_username_password_authentication.call_count == 1
+
+
+@patch("apiclient.request_strategies.requests")
+def test_request_formatter_methods_are_called(mock_requests):
+    mock_get_request_formatter_headers_call.reset_mock()
+    mock_requests.get.return_value.status_code = 200
+
+    client = MinimalClient(
+        authentication_method=NoAuthentication(),
+        response_handler=MockResponseHandler,
+        request_formatter=MockRequestFormatter,
+    )
+    client.read(sentinel.url)
+
+    mock_requests.get.assert_called_once_with(
+        sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
+    )
+    assert mock_get_request_formatter_headers_call.call_count == 1
 
 
 @pytest.mark.parametrize(
