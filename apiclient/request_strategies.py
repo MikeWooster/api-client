@@ -1,21 +1,26 @@
 import logging
-from typing import Callable, Type
+from typing import TYPE_CHECKING, Callable, Type
 
 import requests
 from requests import Response
 
 from apiclient import exceptions
-from apiclient.interface import IClient
 from apiclient.utils.typing import OptionalDict
 
 LOG = logging.getLogger(__name__)
 
 
+if TYPE_CHECKING:  # pragma: no cover
+    # Stupid way of getting around cyclic imports when
+    # using typehinting.
+    from apiclient import BaseClient
+
+
 class BaseRequestStrategy:
-    def set_client(self, client: IClient):
+    def set_client(self, client: "BaseClient"):
         self._client = client
 
-    def get_client(self) -> IClient:
+    def get_client(self) -> "BaseClient":
         return self._client
 
     def create(self, *args, **kwargs):  # pragma: no cover

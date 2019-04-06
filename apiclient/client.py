@@ -3,7 +3,6 @@ import logging
 from typing import Optional, Type
 
 from apiclient.authentication_methods import BaseAuthenticationMethod
-from apiclient.interface import IClient
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler
@@ -15,7 +14,7 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10.0
 
 
-class BaseClient(IClient):
+class BaseClient:
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod,
