@@ -2,10 +2,10 @@ import copy
 import logging
 from typing import Optional, Type
 
-from apiclient.authentication_methods import BaseAuthenticationMethod
-from apiclient.request_formatters import BaseRequestFormatter
+from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
+from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
-from apiclient.response_handlers import BaseResponseHandler
+from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
 from apiclient.utils.typing import OptionalDict
 
 LOG = logging.getLogger(__name__)
@@ -17,9 +17,9 @@ DEFAULT_TIMEOUT = 10.0
 class BaseClient:
     def __init__(
         self,
-        authentication_method: BaseAuthenticationMethod,
-        response_handler: Type[BaseResponseHandler],
-        request_formatter: Type[BaseRequestFormatter],
+        authentication_method: BaseAuthenticationMethod = NoAuthentication(),
+        response_handler: Type[BaseResponseHandler] = RequestsResponseHandler,
+        request_formatter: Type[BaseRequestFormatter] = NoOpRequestFormatter,
     ):
         # Set default values
         self._default_headers = {}

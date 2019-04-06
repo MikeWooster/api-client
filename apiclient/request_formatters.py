@@ -20,6 +20,14 @@ class BaseRequestFormatter:
         raise NotImplementedError
 
 
+class NoOpRequestFormatter(BaseRequestFormatter):
+    """No action request formatter."""
+
+    @classmethod
+    def format(cls, data: OptionalJsonType) -> OptionalJsonType:
+        return data
+
+
 class JsonRequestFormatter(BaseRequestFormatter):
     """Format the outgoing data as json."""
 
