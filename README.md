@@ -14,12 +14,32 @@ pip install api-client
 
 ## Usage
 
+### Simple Example
 ```
 from apiclient import BaseClient
-from apiclient.decorates import endpoint
-from apiclient.paginators import paginated
-from apiclient.retrying import retry_request
 
+class MyClient(BaseClient):
+
+    def list_customers(self):
+        url = "http://example.com/customers"
+        return self.read(url)
+
+    def add_customer(self, customer_info):
+        url = "http://example.com/customers"
+        return self.create(url, data=customer_info)
+
+>>> client = MyClient()
+>>> client.add_customer({"name": "John Smith", "age": 28})
+>>> client.list_customers()
+[
+    ...,
+    {"name": "John Smith", "age": 28},
+]
+```
+
+### Extended Example
+```
+from apiclient import BaseClient, endpoint, paginated, retry_request
 
 
 # Define endpoints, using the provided decorator.
@@ -145,7 +165,7 @@ their own custom decorator.
 Usage:
 
 ```
-from apiclient.retrying import retry_request
+from apiclient import retry_request
 
 class MyClient(BaseClient):
 
@@ -167,7 +187,7 @@ to fetch.  If the response is the last page, the function should return None or 
 Usage:
 
 ```
-from apiclient.paginators import paginated
+from apiclient import paginated
 
 
 def next_page_by_params(response):
@@ -385,7 +405,7 @@ resources.  The decorator will combine the base_url with the resource.
 Example:
 
 ```
-from apiclient.decorates import endpoint
+from apiclient import endpoint
 
 @endpoint(base_url="http://foo.com")
 class Endpoint:
