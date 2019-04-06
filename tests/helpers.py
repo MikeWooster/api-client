@@ -4,10 +4,9 @@ from unittest.mock import Mock
 
 from requests import Response
 
-from apiclient import BaseClient
-from apiclient.authentication_methods import NoAuthentication
-from apiclient.request_formatters import BaseRequestFormatter, JsonRequestFormatter
-from apiclient.response_handlers import BaseResponseHandler, JsonResponseHandler
+from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
+from apiclient.request_formatters import BaseRequestFormatter
+from apiclient.response_handlers import BaseResponseHandler
 
 mock_response_handler_call = Mock()
 mock_request_formatter_call = Mock()

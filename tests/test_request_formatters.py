@@ -1,6 +1,7 @@
 import pytest
 
-from apiclient.request_formatters import BaseRequestFormatter, JsonRequestFormatter
+from apiclient import JsonRequestFormatter
+from apiclient.request_formatters import BaseRequestFormatter
 
 
 class RequestFormatter(BaseRequestFormatter):

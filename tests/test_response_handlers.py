@@ -4,14 +4,9 @@ from xml.etree import ElementTree
 
 import pytest
 
+from apiclient import JsonResponseHandler, RequestsResponseHandler, XmlResponseHandler, YamlResponseHandler
 from apiclient.exceptions import ResponseParseError
-from apiclient.response_handlers import (
-    BaseResponseHandler,
-    JsonResponseHandler,
-    RequestsResponseHandler,
-    XmlResponseHandler,
-    YamlResponseHandler,
-)
+from apiclient.response_handlers import BaseResponseHandler
 from tests.helpers import build_response
 
 

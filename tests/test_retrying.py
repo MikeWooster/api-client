@@ -5,8 +5,8 @@ import pytest
 import tenacity
 from tenacity.compat import make_retry_state
 
+from apiclient import retry_request
 from apiclient.exceptions import APIRequestError, ClientError, RedirectionError, ServerError, UnexpectedError
-from apiclient.retrying import retry_request
 
 
 class RunnableCounter:

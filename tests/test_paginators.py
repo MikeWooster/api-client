@@ -2,12 +2,10 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from apiclient import BaseClient
+from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, paginated
 from apiclient.authentication_methods import NoAuthentication
-from apiclient.paginators import paginated, set_strategy
-from apiclient.request_formatters import JsonRequestFormatter
+from apiclient.paginators import set_strategy
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
-from apiclient.response_handlers import JsonResponseHandler
 from tests.helpers import build_response, client_factory
 
 

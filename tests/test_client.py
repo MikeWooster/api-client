@@ -3,12 +3,10 @@ from unittest.mock import Mock, patch, sentinel
 
 import pytest
 
-from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
+from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
+from apiclient.authentication_methods import BaseAuthenticationMethod
 from apiclient.client import LOG as client_logger
-from apiclient.client import BaseClient
 from apiclient.exceptions import ClientError, RedirectionError, ServerError, UnexpectedError
-from apiclient.request_formatters import JsonRequestFormatter
-from apiclient.response_handlers import JsonResponseHandler
 from tests.helpers import (
     MinimalClient,
     MockRequestFormatter,
