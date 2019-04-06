@@ -1,12 +1,12 @@
 import pytest
 
-from apiclient.authentication_methods import (
+from apiclient import (
+    BaseClient,
     BasicAuthentication,
     HeaderAuthentication,
     NoAuthentication,
     QueryParameterAuthentication,
 )
-from apiclient.client import BaseClient
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.response_handlers import BaseResponseHandler
 

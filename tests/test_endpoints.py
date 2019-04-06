@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from apiclient.decorates import endpoint
+from apiclient import endpoint
 
 
 @endpoint(base_url="http://foo.com")
