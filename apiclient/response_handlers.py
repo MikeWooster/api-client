@@ -6,6 +6,7 @@ import yaml
 from requests import Response
 
 from apiclient.exceptions import ResponseParseError
+from apiclient.utils.typing import JsonType, XmlType
 
 LOG = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class JsonResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response data as json."""
 
     @staticmethod
-    def get_request_data(response: Response) -> dict:
+    def get_request_data(response: Response) -> JsonType:
         try:
             response_json = response.json()
         except JSONDecodeError as error:
@@ -45,7 +46,7 @@ class XmlResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response to an xml Element."""
 
     @staticmethod
-    def get_request_data(response: Response) -> ElementTree.Element:
+    def get_request_data(response: Response) -> XmlType:
         try:
             xml_element = ElementTree.fromstring(response.text)
         except ElementTree.ParseError as error:
@@ -60,7 +61,7 @@ class YamlResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response as yaml."""
 
     @staticmethod
-    def get_request_data(response: Response) -> dict:
+    def get_request_data(response: Response) -> JsonType:
         try:
             response_yaml = yaml.load(response.text)
         except yaml.YAMLError as error:
