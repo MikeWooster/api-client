@@ -6,6 +6,17 @@ This client abstraction aims to reduce the overhead of writing the client,
 and should allow the consumer of the APIs to focus on the high level
 implementation, rather than the design of the client itself.
 
+## Quick links
+1. [Installation](#Installation)
+2. [Client in action](#Usage)
+3. [Adding retries to requests](#Retrying)
+4. [Working with paginated responses](#Pagination)
+5. [Authenticating your requests](#Authentication-Methods)
+6. [Handling the formats of your responses](#Response-Handlers)
+7. [Correctly encoding your outbound request data](#Request-Formatters)
+8. [Handling bad requests and responses](#Exceptions)
+9. [Endpoints as code](#Endpoints)
+
 ## Installation
 
 ```
@@ -36,118 +47,13 @@ class MyClient(BaseClient):
     {"name": "John Smith", "age": 28},
 ]
 ```
-
-### Extended Example
-```
-from apiclient import BaseClient, endpoint, paginated, retry_request
-
-
-# Define endpoints, using the provided decorator.
-@endpoint(base_url="https://jsonplaceholder.typicode.com")
-class Endpoint:
-    todos = "todos"
-    todo = "todos/{id}"
+The `BaseClient` exposes a number of predefined methods that you can call
+This example uses `read` to perform a GET request on an endpoint.
+Other methods include: `create`, `replace`, `update` and `delete`. More 
+information on these methods is documented in the [Interface](# BaseClient-Interface).
 
 
-def get_next_page(response):
-    return {
-        "limit": response["limit"],
-        "offset": response["offset"] + response["limit"],
-    }
-
-
-# Extend the client for your API integration.
-class JSONPlaceholderClient(BaseClient):
-
-    @paginated(by_query_params=get_next_page)
-    def get_all_todos(self) -> dict:
-        return self.read(Endpoint.todos)
-
-    @retry_request
-    def get_todo(self, todo_id: int) -> dict:
-        url = Endpoint.todo.format(id=todo_id)
-        return self.read(url)
-
-
-# Initialize the client with the correct authentication method,
-# response handler and request formatter.
->>> client = JSONPlaceholderClient(
-    authentication_method=HeaderAuthentication(token="<secret_value>"),
-    response_handler=JsonResponseHandler,
-    request_formatter=JsonRequestFormatter,
-)
-
-
-# Call the client methods.
->>> client.get_all_todos()
-[
-    {
-        'userId': 1,
-        'id': 1,
-        'title': 'delectus aut autem',
-        'completed': False
-    },
-    ...,
-    {
-        'userId': 10,
-        'id': 200,
-        'title': 'ipsam aperiam voluptates qui',
-        'completed': False
-    }
-]
-
-
->>> client.get_todo(45)
-{
-    'userId': 3,
-    'id': 45,
-    'title': 'velit soluta adipisci molestias reiciendis harum',
-    'completed': False
-}
-
-
-# REST APIs correctly adhering to the status codes to provide meaningful
-# responses will raise the appropriate exeptions.
->>> client.get_todo(450)
-NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/todos/450
-
->>> try:
-...     client.get_todo(450)
-... except APIClientError:
-...     print("All client exceptions inherit from APIClientError")
-"All client exceptions inherit from APIClientError"
-
-```
-
-## BaseClient Interface
-The `BaseClient` provides the following public interface:
-* `create(self, endpoint: str, data: dict, params: OptionalDict = None)`
-
-   Delegate to POST method to send data and return response from endpoint.
-
-* `read(endpoint: str, params: OptionalDict = None)`
-
-   Delegate to GET method to get response from endpoint.
-
-* `replace(endpoint: str, data: dict, params: OptionalDict = None)`
-
-   Delegate to PUT method to send and overwrite data and return response from endpoint.
-
-* `update(endpoint: str, data: dict, params: OptionalDict = None)`
-
-   Delegate to PATCH method to send and update data and return response from endpoint
-
-* `delete(endpoint: str, params: OptionalDict = None)`
-
-   Delegate to DELETE method to remove resource located at endpoint.
-
-* `get_request_timeout() -> float`
-
-   By default, all requests have been set to have a default timeout of 10.0 s.  This
-   is to avoid the request waiting forever for a response, and is recommended
-   to always be set to a value in production applications.  It is however possible to
-   override this method to return the timeout required by your application.
-
+For a more complex use case example, see: [Extended example] (#Extended-Example)
 
 ## Retrying
 
@@ -174,6 +80,37 @@ class MyClient(BaseClient):
         ...
 
 ```
+
+For more complex use cases, you can build your own retry decorator using
+tenacity along with the custom retry strategy.
+
+For example, you can build a retry decorator that retries `APIRequestError`
+which waits for 2 seconds between retries and gives up after 5 attempts.
+
+```
+import tenacity
+from apiclient.retrying import retry_if_api_request_error
+
+retry_decorator = tenacity.retry(
+    retry=retry_if_api_request_error(),
+    wait=tenacity.wait_fixed(2),
+    stop=tenacity.stop_after_attempt(5),
+    reraise=True,
+)
+```
+
+Or you can build a decorator that will retry only on specific status 
+codes (following a failure).
+
+```
+retry_decorator = tenacity.retry(
+    retry=retry_if_api_request_error(status_codes=[500, 501, 503]),
+    wait=tenacity.wait_fixed(2),
+    stop=tenacity.stop_after_attempt(5),
+    reraise=True,
+)
+```
+
 
 ## Pagination
 
@@ -414,3 +351,115 @@ class Endpoint:
 >>> Endpoint.resource
 "http://foo.com/search
 ```
+
+
+## Extended Example
+```
+from apiclient import BaseClient, endpoint, paginated, retry_request
+
+
+# Define endpoints, using the provided decorator.
+@endpoint(base_url="https://jsonplaceholder.typicode.com")
+class Endpoint:
+    todos = "todos"
+    todo = "todos/{id}"
+
+
+def get_next_page(response):
+    return {
+        "limit": response["limit"],
+        "offset": response["offset"] + response["limit"],
+    }
+
+
+# Extend the client for your API integration.
+class JSONPlaceholderClient(BaseClient):
+
+    @paginated(by_query_params=get_next_page)
+    def get_all_todos(self) -> dict:
+        return self.read(Endpoint.todos)
+
+    @retry_request
+    def get_todo(self, todo_id: int) -> dict:
+        url = Endpoint.todo.format(id=todo_id)
+        return self.read(url)
+
+
+# Initialize the client with the correct authentication method,
+# response handler and request formatter.
+>>> client = JSONPlaceholderClient(
+    authentication_method=HeaderAuthentication(token="<secret_value>"),
+    response_handler=JsonResponseHandler,
+    request_formatter=JsonRequestFormatter,
+)
+
+
+# Call the client methods.
+>>> client.get_all_todos()
+[
+    {
+        'userId': 1,
+        'id': 1,
+        'title': 'delectus aut autem',
+        'completed': False
+    },
+    ...,
+    {
+        'userId': 10,
+        'id': 200,
+        'title': 'ipsam aperiam voluptates qui',
+        'completed': False
+    }
+]
+
+
+>>> client.get_todo(45)
+{
+    'userId': 3,
+    'id': 45,
+    'title': 'velit soluta adipisci molestias reiciendis harum',
+    'completed': False
+}
+
+
+# REST APIs correctly adhering to the status codes to provide meaningful
+# responses will raise the appropriate exeptions.
+>>> client.get_todo(450)
+NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/todos/450
+
+>>> try:
+...     client.get_todo(450)
+... except APIClientError:
+...     print("All client exceptions inherit from APIClientError")
+"All client exceptions inherit from APIClientError"
+
+```
+
+## BaseClient Interface
+The `BaseClient` provides the following public interface:
+* `create(self, endpoint: str, data: dict, params: OptionalDict = None)`
+
+   Delegate to POST method to send data and return response from endpoint.
+
+* `read(endpoint: str, params: OptionalDict = None)`
+
+   Delegate to GET method to get response from endpoint.
+
+* `replace(endpoint: str, data: dict, params: OptionalDict = None)`
+
+   Delegate to PUT method to send and overwrite data and return response from endpoint.
+
+* `update(endpoint: str, data: dict, params: OptionalDict = None)`
+
+   Delegate to PATCH method to send and update data and return response from endpoint
+
+* `delete(endpoint: str, params: OptionalDict = None)`
+
+   Delegate to DELETE method to remove resource located at endpoint.
+
+* `get_request_timeout() -> float`
+
+   By default, all requests have been set to have a default timeout of 10.0 s.  This
+   is to avoid the request waiting forever for a response, and is recommended
+   to always be set to a value in production applications.  It is however possible to
+   override this method to return the timeout required by your application.

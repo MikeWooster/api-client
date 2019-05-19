@@ -7,6 +7,7 @@ from tenacity.compat import make_retry_state
 
 from apiclient import retry_request
 from apiclient.exceptions import APIRequestError, ClientError, RedirectionError, ServerError, UnexpectedError
+from apiclient.retrying import retry_if_api_request_error
 
 
 class RunnableCounter:
@@ -46,6 +47,24 @@ def testing_retries(max_attempts=None, wait=None):
         _retry_enabled_function.retry.stop = tenacity.stop_after_attempt(max_attempts)
     if wait is not None:
         _retry_enabled_function.retry.wait = wait
+
+    yield _retry_enabled_function
+
+
+@contextmanager
+def testing_retry_for_status_code(status_codes=None):
+    """Context manager to create a retry decorated function to test status codes.
+    """
+
+    @tenacity.retry(
+        retry=retry_if_api_request_error(status_codes=status_codes),
+        wait=tenacity.wait_fixed(0),
+        stop=tenacity.stop_after_attempt(2),
+        reraise=True,
+    )
+    def _retry_enabled_function(callable=None):
+        if callable:
+            return callable()
 
     yield _retry_enabled_function
 
@@ -146,3 +165,13 @@ def test_does_not_retry_for_status_codes_under_5xx(status_code):
         with pytest.raises(APIRequestError):
             func(callable)
     assert callable.call_count == 1
+
+
+@pytest.mark.parametrize("status_code", [0, 200, 300, 400, 500, 600, 1000])
+def test_retry_on_status_codes(status_code):
+    side_effects = APIRequestError("Something went wrong.", status_code)
+    callable = RunnableCounter(side_effects)
+    with testing_retry_for_status_code(status_codes=[status_code]) as func:
+        with pytest.raises(APIRequestError):
+            func(callable)
+    assert callable.call_count == 2

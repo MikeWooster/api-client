@@ -1,4 +1,5 @@
 import random
+from typing import List
 
 import tenacity
 
@@ -12,10 +13,13 @@ class retry_if_api_request_error(tenacity.retry_if_exception):
     * APIRequestError with no status code will be retried by default as
       this indicates that we were not able to establish a connection and
       can be safely retried.
+    * when passed a list of status codes, if the raised status code is in the
+      list then the request will be retried.
     * status codes >= 500 codes will be retried.
     """
 
-    def __init__(self):
+    def __init__(self, status_codes: List[int] = None):
+        self._status_codes = status_codes
         super().__init__(self._retry_if)
 
     def _retry_if(self, error):
@@ -23,7 +27,9 @@ class retry_if_api_request_error(tenacity.retry_if_exception):
             return False
         if error.status_code is None:
             return True
-        # 500 status codes are usually safe to retry.
+        if self._status_codes:
+            return error.status_code in self._status_codes
+        # Fallback - 500 status codes are usually safe to retry.
         return error.status_code >= 500
 
 
