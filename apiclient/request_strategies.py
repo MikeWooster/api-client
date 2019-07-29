@@ -23,16 +23,16 @@ class BaseRequestStrategy:
     def get_client(self) -> "BaseClient":
         return self._client
 
-    def create(self, *args, **kwargs):  # pragma: no cover
+    def post(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
-    def read(self, *args, **kwargs):  # pragma: no cover
+    def get(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
-    def replace(self, *args, **kwargs):  # pragma: no cover
+    def put(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
-    def update(self, *args, **kwargs):  # pragma: no cover
+    def patch(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
     def delete(self, *args, **kwargs):  # pragma: no cover
@@ -40,19 +40,19 @@ class BaseRequestStrategy:
 
 
 class RequestStrategy(BaseRequestStrategy):
-    def create(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def post(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data and return response data from POST endpoint."""
         return self._make_request(requests.post, endpoint, data=data, params=params)
 
-    def read(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None):
         """Return response data from GET endpoint."""
         return self._make_request(requests.get, endpoint, params=params)
 
-    def replace(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def put(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data to overwrite resource and return response data from PUT endpoint."""
         return self._make_request(requests.put, endpoint, data=data, params=params)
 
-    def update(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def patch(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data to update resource and return response data from PATCH endpoint."""
         return self._make_request(requests.patch, endpoint, data=data, params=params)
 
@@ -163,10 +163,10 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
     def __init__(self, next_page: Callable):
         self._next_page = next_page
 
-    def read(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None):
         while True:
 
-            response = super().read(endpoint, params=params)
+            response = super().get(endpoint, params=params)
 
             yield response
 
@@ -193,9 +193,9 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
     def __init__(self, next_page: Callable):
         self._next_page = next_page
 
-    def read(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None):
         while True:
-            response = super().read(endpoint, params=params)
+            response = super().get(endpoint, params=params)
 
             yield response
 

@@ -33,11 +33,11 @@ class MyClient(BaseClient):
 
     def list_customers(self):
         url = "http://example.com/customers"
-        return self.read(url)
+        return self.get(url)
 
     def add_customer(self, customer_info):
         url = "http://example.com/customers"
-        return self.create(url, data=customer_info)
+        return self.post(url, data=customer_info)
 
 >>> client = MyClient()
 >>> client.add_customer({"name": "John Smith", "age": 28})
@@ -48,12 +48,12 @@ class MyClient(BaseClient):
 ]
 ```
 The `BaseClient` exposes a number of predefined methods that you can call
-This example uses `read` to perform a GET request on an endpoint.
-Other methods include: `create`, `replace`, `update` and `delete`. More 
-information on these methods is documented in the [Interface](# BaseClient-Interface).
+This example uses `get` to perform a GET request on an endpoint.
+Other methods include: `post`, `put`, `patch` and `delete`. More 
+information on these methods is documented in the [Interface](#BaseClient-Interface).
 
 
-For a more complex use case example, see: [Extended example] (#Extended-Example)
+For a more complex use case example, see: [Extended example](#Extended-Example)
 
 ## Retrying
 
@@ -114,7 +114,7 @@ retry_decorator = tenacity.retry(
 
 ## Pagination
 
-In order to support contacting pages that respond with multiple pages of data when making read requests,
+In order to support contacting pages that respond with multiple pages of data when making get requests,
 add a `@paginated` decorator to your client method.  `@paginated` can paginate the requests either where
 the pages are specified in the query parameters, or by modifying the url.
 
@@ -377,12 +377,12 @@ class JSONPlaceholderClient(BaseClient):
 
     @paginated(by_query_params=get_next_page)
     def get_all_todos(self) -> dict:
-        return self.read(Endpoint.todos)
+        return self.get(Endpoint.todos)
 
     @retry_request
     def get_todo(self, todo_id: int) -> dict:
         url = Endpoint.todo.format(id=todo_id)
-        return self.read(url)
+        return self.get(url)
 
 
 # Initialize the client with the correct authentication method,
@@ -437,19 +437,19 @@ NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/tod
 
 ## BaseClient Interface
 The `BaseClient` provides the following public interface:
-* `create(self, endpoint: str, data: dict, params: OptionalDict = None)`
+* `post(self, endpoint: str, data: dict, params: OptionalDict = None)`
 
    Delegate to POST method to send data and return response from endpoint.
 
-* `read(endpoint: str, params: OptionalDict = None)`
+* `get(endpoint: str, params: OptionalDict = None)`
 
    Delegate to GET method to get response from endpoint.
 
-* `replace(endpoint: str, data: dict, params: OptionalDict = None)`
+* `put(endpoint: str, data: dict, params: OptionalDict = None)`
 
    Delegate to PUT method to send and overwrite data and return response from endpoint.
 
-* `update(endpoint: str, data: dict, params: OptionalDict = None)`
+* `patch(endpoint: str, data: dict, params: OptionalDict = None)`
 
    Delegate to PATCH method to send and update data and return response from endpoint
 
