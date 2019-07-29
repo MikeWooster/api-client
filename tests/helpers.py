@@ -6,6 +6,7 @@ from requests import Response
 
 from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
 from apiclient.request_formatters import BaseRequestFormatter
+from apiclient.request_strategies import BaseRequestStrategy
 from apiclient.response_handlers import BaseResponseHandler
 
 mock_response_handler_call = Mock()
@@ -42,6 +43,25 @@ class MockRequestFormatter(BaseRequestFormatter):
         return data
 
 
+class NoOpRequestStrategy(BaseRequestStrategy):
+    """Request strategy to mock out all calls below client."""
+
+    def get(self, *args, **kwargs):
+        pass
+
+    def post(self, *args, **kwargs):
+        pass
+
+    def put(self, *args, **kwargs):
+        pass
+
+    def patch(self, *args, **kwargs):
+        pass
+
+    def delete(self, *args, **kwargs):
+        pass
+
+
 def build_response(data=None, json=None) -> Response:
     """Return a requests.Response object with the data set as the content."""
     response = Response()
@@ -60,7 +80,7 @@ def build_response(data=None, json=None) -> Response:
     return response
 
 
-def client_factory(build_with=None):
+def client_factory(build_with=None, request_strategy=None):
     """Return an initialized client class."""
     factory_floor = {
         "json": MinimalClient(
@@ -74,4 +94,7 @@ def client_factory(build_with=None):
             request_formatter=MockRequestFormatter,
         ),
     }
-    return factory_floor.get(build_with, factory_floor["mocker"])
+    client = factory_floor.get(build_with, factory_floor["mocker"])
+    if request_strategy is not None:
+        client.set_request_strategy(request_strategy)
+    return client

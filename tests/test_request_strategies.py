@@ -29,7 +29,7 @@ def test_query_param_paginated_strategy_delegates_to_callable(mock_requests):
 
     strategy = request_strategy_factory(QueryParamPaginatedRequestStrategy, next_page)
 
-    response = strategy.read("http://example.com")
+    response = strategy.get("http://example.com")
 
     assert list(response) == [{"foo": "bar"}]
     assert mock_requests.get.call_count == 1
@@ -45,7 +45,7 @@ def test_query_param_paginated_strategy_stops_paginating_when_encounters_error(m
 
     strategy = request_strategy_factory(QueryParamPaginatedRequestStrategy, next_page)
 
-    response = strategy.read("http://example.com")
+    response = strategy.get("http://example.com")
 
     assert list(response) == [{"foo": "bar"}]
     assert mock_requests.get.call_count == 1
@@ -59,7 +59,7 @@ def test_url_paginated_strategy_delegates_to_callable(mock_requests):
 
     strategy = request_strategy_factory(UrlPaginatedRequestStrategy, next_page)
 
-    response = strategy.read("http://example.com")
+    response = strategy.get("http://example.com")
 
     assert list(response) == [{"foo": "bar"}]
     assert mock_requests.get.call_count == 1
@@ -75,7 +75,7 @@ def test_url_paginated_strategy_stops_paginating_when_encounters_error(mock_requ
 
     strategy = request_strategy_factory(UrlPaginatedRequestStrategy, next_page)
 
-    response = strategy.read("http://example.com")
+    response = strategy.get("http://example.com")
 
     assert list(response) == [{"foo": "bar"}]
     assert mock_requests.get.call_count == 1

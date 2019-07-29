@@ -85,24 +85,44 @@ class BaseClient:
         return copy.deepcopy(self)
 
     def create(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Send data and return response data from POST endpoint."""
-        LOG.info("POST %s with %s", endpoint, data)
-        return self.get_request_strategy().create(endpoint, data=data, params=params)
+        """Provide backwards compatibility adaptor from create() -> post()."""
+        LOG.warning("`create()` will be deprecated in version 1.2. use `post()` instead.")
+        return self.post(endpoint, data=data, params=params)
 
     def read(self, endpoint: str, params: OptionalDict = None):
-        """Return response data from GET endpoint."""
-        LOG.info("GET %s", endpoint)
-        return self.get_request_strategy().read(endpoint, params=params)
+        """Provide backwards compatibility adaptor from read() -> get()."""
+        LOG.warning("`read()` will be deprecated in version 1.2. use `get()` instead.")
+        return self.get(endpoint, params=params)
 
     def replace(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Send data to overwrite resource and return response data from PUT endpoint."""
-        LOG.info("PUT %s with %s", endpoint, data)
-        return self.get_request_strategy().replace(endpoint, data=data, params=params)
+        """Provide backwards compatibility adaptor from replace() -> put()."""
+        LOG.warning("`replace()` will be deprecated in version 1.2. use `put()` instead.")
+        return self.put(endpoint, data=data, params=params)
 
     def update(self, endpoint: str, data: dict, params: OptionalDict = None):
+        """Provide backwards compatibility adaptor from update() -> patch()."""
+        LOG.warning("`update()` will be deprecated in version 1.2. use `patch()` instead.")
+        return self.patch(endpoint, data=data, params=params)
+
+    def post(self, endpoint: str, data: dict, params: OptionalDict = None):
+        """Send data and return response data from POST endpoint."""
+        LOG.info("POST %s with %s", endpoint, data)
+        return self.get_request_strategy().post(endpoint, data=data, params=params)
+
+    def get(self, endpoint: str, params: OptionalDict = None):
+        """Return response data from GET endpoint."""
+        LOG.info("GET %s", endpoint)
+        return self.get_request_strategy().get(endpoint, params=params)
+
+    def put(self, endpoint: str, data: dict, params: OptionalDict = None):
+        """Send data to overwrite resource and return response data from PUT endpoint."""
+        LOG.info("PUT %s with %s", endpoint, data)
+        return self.get_request_strategy().put(endpoint, data=data, params=params)
+
+    def patch(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data to update resource and return response data from PATCH endpoint."""
         LOG.info("PATCH %s with %s", endpoint, data)
-        return self.get_request_strategy().update(endpoint, data=data, params=params)
+        return self.get_request_strategy().patch(endpoint, data=data, params=params)
 
     def delete(self, endpoint: str, params: OptionalDict = None):
         """Remove resource with DELETE endpoint."""

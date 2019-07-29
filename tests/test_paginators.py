@@ -22,13 +22,13 @@ def next_page_url(response):
 class QueryPaginatedClient(BaseClient):
     @paginated(by_query_params=next_page_param)
     def make_read_request(self):
-        return self.read(endpoint="http://example.com")
+        return self.get(endpoint="http://example.com")
 
 
 class UrlPaginatedClient(BaseClient):
     @paginated(by_url=next_page_url)
     def make_read_request(self):
-        return self.read(endpoint="http://example.com")
+        return self.get(endpoint="http://example.com")
 
 
 def test_query_parameter_pagination(mock_requests):

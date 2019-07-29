@@ -11,6 +11,7 @@ from tests.helpers import (
     MinimalClient,
     MockRequestFormatter,
     MockResponseHandler,
+    NoOpRequestStrategy,
     client_factory,
     mock_get_request_formatter_headers_call,
     mock_request_formatter_call,
@@ -24,11 +25,11 @@ class JSONPlaceholderClient(BaseClient):
 
     def get_all_todos(self) -> dict:
         url = f"{self.base_url}/todos"
-        return self.read(url)
+        return self.get(url)
 
     def get_todo(self, todo_id: int) -> dict:
         url = f"{self.base_url}/todos/{todo_id}"
-        return self.read(url)
+        return self.get(url)
 
 
 def test_client_initialization_with_invalid_authentication_method():
@@ -65,7 +66,7 @@ def test_client_initialization_with_invalid_requests_handler():
 @patch("apiclient.request_strategies.requests")
 def test_create_method_success(mock_requests):
     mock_requests.post.return_value.status_code = 201
-    client_factory().create(sentinel.url, data={"foo": "bar"})
+    client_factory().post(sentinel.url, data={"foo": "bar"})
     mock_requests.post.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
@@ -74,7 +75,7 @@ def test_create_method_success(mock_requests):
 @patch("apiclient.request_strategies.requests")
 def test_create_method_with_params(mock_requests):
     mock_requests.post.return_value.status_code = 201
-    client_factory().create(sentinel.url, data={"foo": "bar"}, params={"query": "foo"})
+    client_factory().post(sentinel.url, data={"foo": "bar"}, params={"query": "foo"})
     mock_requests.post.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={"query": "foo"}, timeout=10.0
     )
@@ -83,7 +84,7 @@ def test_create_method_with_params(mock_requests):
 @patch("apiclient.request_strategies.requests")
 def test_read_method_success(mock_requests):
     mock_requests.get.return_value.status_code = 200
-    client_factory().read(sentinel.url)
+    client_factory().get(sentinel.url)
     mock_requests.get.assert_called_once_with(
         sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
     )
@@ -92,7 +93,7 @@ def test_read_method_success(mock_requests):
 @patch("apiclient.request_strategies.requests")
 def test_replace_method_success(mock_requests):
     mock_requests.put.return_value.status_code = 200
-    client_factory().replace(sentinel.url, data={"foo": "bar"})
+    client_factory().put(sentinel.url, data={"foo": "bar"})
     mock_requests.put.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
@@ -101,7 +102,7 @@ def test_replace_method_success(mock_requests):
 @patch("apiclient.request_strategies.requests")
 def test_update_method_success(mock_requests):
     mock_requests.patch.return_value.status_code = 200
-    client_factory().update(sentinel.url, data={"foo": "bar"})
+    client_factory().patch(sentinel.url, data={"foo": "bar"})
     mock_requests.patch.assert_called_once_with(
         sentinel.url, auth=None, headers={}, data={"foo": "bar"}, params={}, timeout=10.0
     )
@@ -129,7 +130,7 @@ def test_authentication_methods_are_called(mock_requests):
         response_handler=MockResponseHandler,
         request_formatter=MockRequestFormatter,
     )
-    client.read(sentinel.url)
+    client.get(sentinel.url)
 
     mock_requests.get.assert_called_once_with(
         sentinel.url,
@@ -154,7 +155,7 @@ def test_request_formatter_methods_are_called(mock_requests):
         response_handler=MockResponseHandler,
         request_formatter=MockRequestFormatter,
     )
-    client.read(sentinel.url)
+    client.get(sentinel.url)
 
     mock_requests.get.assert_called_once_with(
         sentinel.url, auth=None, headers={}, params={}, data=None, timeout=10.0
@@ -166,18 +167,14 @@ def test_request_formatter_methods_are_called(mock_requests):
     "client_method,client_args,patch_methodname",
     [
         (
-            client_factory().create,
+            client_factory().post,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.post",
         ),
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -201,18 +198,14 @@ def test_make_request_error_raises_and_logs_unexpected_error(
     "client_method,client_args,patch_methodname",
     [
         (
-            client_factory().create,
+            client_factory().post,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.post",
         ),
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -240,18 +233,14 @@ def test_server_error_raises_and_logs_client_server_error(
     "client_method,client_args,patch_methodname",
     [
         (
-            client_factory().create,
+            client_factory().post,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.post",
         ),
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -281,18 +270,14 @@ def test_not_modified_response_raises_and_logs_client_redirection_error(
     "client_method,client_args,patch_methodname",
     [
         (
-            client_factory().create,
+            client_factory().post,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.post",
         ),
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -322,18 +307,14 @@ def test_not_found_response_raises_and_logs_client_bad_request_error(
     "client_method,client_args,patch_methodname",
     [
         (
-            client_factory().create,
+            client_factory().post,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.post",
         ),
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -363,14 +344,10 @@ def test_unexpected_status_code_response_raises_and_logs_unexpected_error(
 @pytest.mark.parametrize(
     "client_method,client_args,patch_methodname",
     [
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -394,18 +371,14 @@ def test_query_params_are_updated_and_not_overwritten(client_method, client_args
     "client_method,client_args,patch_methodname",
     [
         (
-            client_factory().create,
+            client_factory().post,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.post",
         ),
-        (client_factory().read, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().get, (sentinel.url,), "apiclient.request_strategies.requests.get"),
+        (client_factory().put, (sentinel.url, {"foo": "bar"}), "apiclient.request_strategies.requests.put"),
         (
-            client_factory().replace,
-            (sentinel.url, {"foo": "bar"}),
-            "apiclient.request_strategies.requests.put",
-        ),
-        (
-            client_factory().update,
+            client_factory().patch,
             (sentinel.url, {"foo": "bar"}),
             "apiclient.request_strategies.requests.patch",
         ),
@@ -427,9 +400,9 @@ def test_delegates_to_response_handler(client_method, client_args, patch_methodn
 @pytest.mark.parametrize(
     "client_method,url,patch_methodname",
     [
-        (client_factory().create, sentinel.url, "apiclient.request_strategies.requests.post"),
-        (client_factory().replace, sentinel.url, "apiclient.request_strategies.requests.put"),
-        (client_factory().update, sentinel.url, "apiclient.request_strategies.requests.patch"),
+        (client_factory().post, sentinel.url, "apiclient.request_strategies.requests.post"),
+        (client_factory().put, sentinel.url, "apiclient.request_strategies.requests.put"),
+        (client_factory().patch, sentinel.url, "apiclient.request_strategies.requests.patch"),
     ],
 )
 def test_data_parsing_delegates_to_request_formatter(client_method, url, patch_methodname):
@@ -467,3 +440,36 @@ def test_setting_incorrect_request_strategy_raises_runtime_error():
     with pytest.raises(RuntimeError) as exc_info:
         client.set_request_strategy("not a strategy")
     assert str(exc_info.value) == "provided request_strategy must be an instance of BaseRequestStrategy."
+
+
+@pytest.mark.parametrize(
+    "client_method,kwargs,expected",
+    [
+        (
+            client_factory(request_strategy=NoOpRequestStrategy()).create,
+            {"data": sentinel.data},
+            "`create()` will be deprecated in version 1.2. use `post()` instead.",
+        ),
+        (
+            client_factory(request_strategy=NoOpRequestStrategy()).read,
+            {},
+            "`read()` will be deprecated in version 1.2. use `get()` instead.",
+        ),
+        (
+            client_factory(request_strategy=NoOpRequestStrategy()).replace,
+            {"data": sentinel.data},
+            "`replace()` will be deprecated in version 1.2. use `put()` instead.",
+        ),
+        (
+            client_factory(request_strategy=NoOpRequestStrategy()).update,
+            {"data": sentinel.data},
+            "`update()` will be deprecated in version 1.2. use `patch()` instead.",
+        ),
+    ],
+)
+def test_deprecation_warnings(client_method, kwargs, expected, caplog):
+    caplog.set_level(logger=client_logger.name, level=logging.WARNING)
+
+    client_method(sentinel.url, **kwargs)
+
+    assert expected in caplog.messages
