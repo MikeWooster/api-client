@@ -1,10 +1,20 @@
 version: 2
 workflows:
   version: 2
-  test:
+  build_test_deploy:
     jobs:
       - test-36
       - test-37
+      - deploy:
+          requires:
+            - test-36
+            - test-37
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /[0-9]+\.[0-9]+\.[0-9]+/
+
 jobs:
   test-36:
     docker:
@@ -64,3 +74,30 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+  deploy:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run:
+          name: install python dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -e .[deploy]
+      - run:
+          name: init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: create packages
+          command: |
+            rm -rf dist/*
+            python setup.py sdist
+      - run:
+          name: upload to pypi
+          command: |
+            . venv/bin/activate
+            twine upload dist/*

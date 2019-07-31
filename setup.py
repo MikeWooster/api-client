@@ -25,6 +25,7 @@ docs_dependencies = []
 dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + [
     "ipdb",
 ]
+deploy_dependencies = ["twine"]
 
 
 with open("README.md", "r") as fh:
@@ -58,6 +59,7 @@ setuptools.setup(
         "lint": lint_dependencies,
         "docs": dev_dependencies,
         "dev": dev_dependencies,
+        "deploy": deploy_dependencies,
     },
     include_package_data=True,
     zip_safe=False,
