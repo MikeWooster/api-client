@@ -3,29 +3,13 @@
 import setuptools
 
 
-application_dependencies = [
-    "requests>=2.16",
-    "pyyaml",
-    "tenacity",
-]
+application_dependencies = ["requests>=2.16", "pyyaml", "tenacity"]
 prod_dependencies = []
-test_dependencies = [
-    "pytest",
-    "pytest-env",
-    "pytest-cov",
-    "vcrpy",
-]
-lint_dependencies = [
-    "flake8",
-    "flake8-docstrings",
-    "black",
-    "isort",
-]
+test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy"]
+lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
-dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + [
-    "ipdb",
-]
-deploy_dependencies = ["twine"]
+dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
+deploy_dependencies = ["requests", "twine"]
 
 
 with open("README.md", "r") as fh:
@@ -42,9 +26,7 @@ setuptools.setup(
     author_email="",
     url="https://github.com/MikeWooster/api-client",
     python_requires=">=3.6",
-    packages=[
-        "apiclient",
-    ],
+    packages=["apiclient"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 3.6",
