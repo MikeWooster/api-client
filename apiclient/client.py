@@ -14,7 +14,7 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10.0
 
 
-class BaseClient:
+class APIClient:
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod = NoAuthentication(),
@@ -128,3 +128,14 @@ class BaseClient:
         """Remove resource with DELETE endpoint."""
         LOG.info("DELETE %s", endpoint)
         return self.get_request_strategy().delete(endpoint, params=params)
+
+
+class BaseClient(APIClient):
+    """Provide backwards compatibility for BaseClient usage until it is removed."""
+
+    def __init__(self, *args, **kwargs):
+        LOG.warning(
+            "`BaseClient` has been deprecated in version 1.1.4 and will be removed in version 1.2.0, "
+            "please use `APIClient` instead."
+        )
+        super().__init__(*args, **kwargs)

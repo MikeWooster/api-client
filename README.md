@@ -27,9 +27,9 @@ pip install api-client
 
 ### Simple Example
 ```
-from apiclient import BaseClient
+from apiclient import APIClient
 
-class MyClient(BaseClient):
+class MyClient(APIClient):
 
     def list_customers(self):
         url = "http://example.com/customers"
@@ -47,10 +47,10 @@ class MyClient(BaseClient):
     {"name": "John Smith", "age": 28},
 ]
 ```
-The `BaseClient` exposes a number of predefined methods that you can call
+The `APIClient` exposes a number of predefined methods that you can call
 This example uses `get` to perform a GET request on an endpoint.
 Other methods include: `post`, `put`, `patch` and `delete`. More 
-information on these methods is documented in the [Interface](#BaseClient-Interface).
+information on these methods is documented in the [Interface](#APIClient-Interface).
 
 
 For a more complex use case example, see: [Extended example](#Extended-Example)
@@ -73,7 +73,7 @@ Usage:
 ```
 from apiclient import retry_request
 
-class MyClient(BaseClient):
+class MyClient(APIClient):
 
     @retry_request
     def retry_enabled_method():
@@ -139,7 +139,7 @@ def next_page_by_url(response):
     return response["pages"]["next"]["url"]
 
 
-class MyClient(BaseClient):
+class MyClient(APIClient):
 
     @paginated(by_query_params=next_page_by_params)
     def paginated_example_one():
@@ -355,7 +355,7 @@ class Endpoint:
 
 ## Extended Example
 ```
-from apiclient import BaseClient, endpoint, paginated, retry_request
+from apiclient import APIClient, endpoint, paginated, retry_request
 
 
 # Define endpoints, using the provided decorator.
@@ -373,7 +373,7 @@ def get_next_page(response):
 
 
 # Extend the client for your API integration.
-class JSONPlaceholderClient(BaseClient):
+class JSONPlaceholderClient(APIClient):
 
     @paginated(by_query_params=get_next_page)
     def get_all_todos(self) -> dict:
@@ -435,8 +435,8 @@ NotFound: 404 Error: Not Found for url: https://jsonplaceholder.typicode.com/tod
 
 ```
 
-## BaseClient Interface
-The `BaseClient` provides the following public interface:
+## APIClient Interface
+The `APIClient` provides the following public interface:
 * `post(self, endpoint: str, data: dict, params: OptionalDict = None)`
 
    Delegate to POST method to send data and return response from endpoint.

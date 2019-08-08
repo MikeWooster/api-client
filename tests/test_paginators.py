@@ -2,7 +2,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, paginated
+from apiclient import APIClient, JsonRequestFormatter, JsonResponseHandler, paginated
 from apiclient.authentication_methods import NoAuthentication
 from apiclient.paginators import set_strategy
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
@@ -19,13 +19,13 @@ def next_page_url(response):
         return response["next"]
 
 
-class QueryPaginatedClient(BaseClient):
+class QueryPaginatedClient(APIClient):
     @paginated(by_query_params=next_page_param)
     def make_read_request(self):
         return self.get(endpoint="http://example.com")
 
 
-class UrlPaginatedClient(BaseClient):
+class UrlPaginatedClient(APIClient):
     @paginated(by_url=next_page_url)
     def make_read_request(self):
         return self.get(endpoint="http://example.com")

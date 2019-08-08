@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from requests import Response
 
-from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
+from apiclient import APIClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy
 from apiclient.response_handlers import BaseResponseHandler
@@ -14,7 +14,7 @@ mock_request_formatter_call = Mock()
 mock_get_request_formatter_headers_call = Mock()
 
 
-class MinimalClient(BaseClient):
+class MinimalClient(APIClient):
     """Minimal client - no implementation."""
 
     pass
