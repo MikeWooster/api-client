@@ -118,8 +118,12 @@ In order to support contacting pages that respond with multiple pages of data wh
 add a `@paginated` decorator to your client method.  `@paginated` can paginate the requests either where
 the pages are specified in the query parameters, or by modifying the url.
 
-Usage is simple in both cases; write a function that takes the response data and return the next page
-to fetch.  If the response is the last page, the function should return None or raise an error.
+Usage is simple in both cases; paginator decorators take a Callable with two required arguments:
+- `by_query_params` -> callable takes `response` and `previous_page_params`.
+- `by_url` -> callable takes `respones` and `previous_page_url`.
+The callable will need to return either the params in the case of `by_query_params`, or a new url in the 
+case of `by_url`.
+If the response is the last page, the function should return None.
 
 Usage:
 
@@ -127,13 +131,13 @@ Usage:
 from apiclient import paginated
 
 
-def next_page_by_params(response):
+def next_page_by_params(response, previous_page_params):
     # Function reads the response data and returns the query param
     # that tells the next request to go to.
     return {"next": response["pages"]["next"]
 
 
-def next_page_by_url(response):
+def next_page_by_url(response, previous_page_url):
     # Function reads the response and returns the url as string
     # where the next page of data lives.
     return response["pages"]["next"]["url"]
@@ -172,12 +176,25 @@ client = ClientImplementation(
 This authentication method simply does not add anything to the client,
 allowing the api to contact APIs that do not enforce any authentication.
 
+Example:
+```
+client = ClientImplementation(
+   authentication_method=NoAuthentication(),
+   response_handler=...,
+   request_formatter=...,
+)
+```
+
 ### `QueryParameterAuthentication`
 This authentication method adds the relevant parameter and token to the
 client query parameters.  Usage is as follows:
 
 ```
-authentication_method=QueryParameterAuthentication(parameter="apikey", token="secret_token"),
+client = ClientImplementation(
+    authentication_method=QueryParameterAuthentication(parameter="apikey", token="secret_token"),
+    response_handler=...,
+    request_formatter=...,
+)
 ```
 Example. Contacting a url with the following data
 ```
@@ -192,7 +209,11 @@ http://api.example.com/users?age=27&apikey=secret_token
 This authentication method adds the relevant authorization header to
 the outgoing request.  Usage is as follows:
 ```
-authentication_method=HeaderAuthentication(token="secret_value")
+client = ClientImplementation(
+    authentication_method=HeaderAuthentication(token="secret_value"),
+    response_handler=...,
+    request_formatter=...,
+)
 
 # Constructs request header:
 {"Authorization": "Bearer secret_value"}
@@ -202,12 +223,12 @@ specifying on method initialization.
 ```
 authentication_method=HeaderAuthentication(
    token="secret_value"
-   parameter="Foo",
-   scheme="Bar",
+   parameter="apikey",
+   scheme="Token",
 )
 
 # Constructs request header:
-{"Foo": "Bar secret_value"}
+{"apikey": "Token secret_value"}
 ```
 
 Or alternatively, when APIs do not require a scheme to be set, you can
@@ -216,19 +237,23 @@ the header:
 ```
 authentication_method=HeaderAuthentication(
    token="secret_value"
-   parameter="Foo",
+   parameter="token",
    scheme=None,
 )
 
 # Constructs request header:
-{"Foo": "secret_value"}
+{"token": "secret_value"}
 ```
 
 ### `BasicAuthentication`
 This authentication method enables specifying a username and password to APIs
 that require such.
 ```
-authentication_method=BasicAuthentication(username="foo", password="secret_value")
+client = ClientImplementation(
+    authentication_method=BasicAuthentication(username="foo", password="secret_value"),
+    response_handler=...,
+    request_formatter=...,
+)
 ```
 
 ## Response Handlers
@@ -240,6 +265,9 @@ will take the `requests.Response` object and parse the data accordingly.
 
 The apiclient supports the following response handlers, by specifying
 the class on initialization of the client as follows:
+
+The response handler can be omitted, in which case no formatting is applied to the
+outgoing data.
 
 ```
 client = ClientImplementation(
@@ -253,20 +281,56 @@ client = ClientImplementation(
 Handler that simply returns the original `Response` object with no
 alteration.
 
+Example:
+```
+client = ClientImplementation(
+    authentication_method=...,
+    response_handler=RequestsResponseHandler,
+    request_formatter=...,
+)
+```
+
 ### `JsonResponseHandler`
 Handler that parses the response data to `json` and returns the dictionary.
 If an error occurs trying to parse to json then a `UnexpectedError`
 will be raised.
+
+Example:
+```
+client = ClientImplementation(
+    authentication_method=...,
+    response_handler=JsonResponseHandler,
+    request_formatter=...,
+)
+```
 
 ### `XmlResponseHandler`
 Handler that parses the response data to an `xml.etree.ElementTree.Element`.
 If an error occurs trying to parse to xml then a `UnexpectedError`
 will be raised.
 
+Example:
+```
+client = ClientImplementation(
+    authentication_method=...,
+    response_handler=XmlResponseHandler,
+    request_formatter=...,
+)
+```
+
 ### `YamlResponseHandler`
 Handler that parses the response data in `yaml` format and returns the
 dictionary.  If an error occurs trying to parse the yaml then an `UnexpectedError`
 will be raised.
+
+Example:
+```
+client = ClientImplementation(
+    authentication_method=...,
+    response_handler=YamlResponseHandler,
+    request_formatter=...,
+)
+```
 
 ## Request Formatters
 
@@ -291,8 +355,17 @@ client = ClientImplementation(
 ### `JsonRequestFormatter`
 
 Formatter that converts the data into a json format and adds the
-`application/json` Content-type header to the outoing requests.
+`application/json` Content-type header to the outgoing requests.
 
+
+Example:
+```
+client = ClientImplementation(
+    authentication_method=...,
+    response_handler=...,
+    request_formatter=JsonRequestFormatter,
+)
+```
 
 ## Exceptions
 
