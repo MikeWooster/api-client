@@ -3,9 +3,10 @@ from unittest.mock import Mock, patch, sentinel
 
 import pytest
 
-from apiclient import BaseClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
+from apiclient import APIClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
 from apiclient.authentication_methods import BaseAuthenticationMethod
 from apiclient.client import LOG as client_logger
+from apiclient.client import BaseClient
 from apiclient.exceptions import ClientError, RedirectionError, ServerError, UnexpectedError
 from tests.helpers import (
     MinimalClient,
@@ -20,7 +21,7 @@ from tests.helpers import (
 
 
 # Real world api client with GET methods implemented.
-class JSONPlaceholderClient(BaseClient):
+class JSONPlaceholderClient(APIClient):
     base_url = "https://jsonplaceholder.typicode.com"
 
     def get_all_todos(self) -> dict:
@@ -472,4 +473,16 @@ def test_deprecation_warnings(client_method, kwargs, expected, caplog):
 
     client_method(sentinel.url, **kwargs)
 
+    assert expected in caplog.messages
+
+
+def test_client_initialization_deprecation_warning_when_using_baseclient(caplog):
+    caplog.set_level(logger=client_logger.name, level=logging.WARNING)
+
+    BaseClient()
+
+    expected = (
+        "`BaseClient` has been deprecated in version 1.1.4 and will be removed in version 1.2.0, "
+        "please use `APIClient` instead."
+    )
     assert expected in caplog.messages

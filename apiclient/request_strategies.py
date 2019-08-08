@@ -13,14 +13,14 @@ LOG = logging.getLogger(__name__)
 if TYPE_CHECKING:  # pragma: no cover
     # Stupid way of getting around cyclic imports when
     # using typehinting.
-    from apiclient import BaseClient
+    from apiclient import APIClient
 
 
 class BaseRequestStrategy:
-    def set_client(self, client: "BaseClient"):
+    def set_client(self, client: "APIClient"):
         self._client = client
 
-    def get_client(self) -> "BaseClient":
+    def get_client(self) -> "APIClient":
         return self._client
 
     def post(self, *args, **kwargs):  # pragma: no cover

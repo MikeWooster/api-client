@@ -5,7 +5,7 @@ from apiclient.authentication_methods import (
     NoAuthentication,
     QueryParameterAuthentication,
 )
-from apiclient.client import BaseClient
+from apiclient.client import APIClient
 from apiclient.decorates import endpoint
 from apiclient.paginators import paginated
 from apiclient.request_formatters import JsonRequestFormatter
