@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Type
 
 import requests
@@ -164,27 +165,24 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
         self._next_page = next_page
 
     def get(self, endpoint: str, params: OptionalDict = None):
-        while True:
+        if params is None:
+            params = {}
 
-            response = super().get(endpoint, params=params)
+        while True:
+            this_page_params = deepcopy(params)
+
+            response = super().get(endpoint, params=this_page_params)
 
             yield response
-
-            next_page_params = self.get_next_page_params(response)
+            next_page_params = self.get_next_page_params(response, previous_page_params=this_page_params)
             if next_page_params:
-                params = params if params else {}
                 params.update(next_page_params)
             else:
                 # No further pages found
                 break
 
-    def get_next_page_params(self, response) -> OptionalDict:
-        try:
-            next_page = self._next_page(response)
-        except Exception:
-            # Unable to get the next page from function.
-            next_page = None
-        return next_page
+    def get_next_page_params(self, response, previous_page_params: dict) -> OptionalDict:
+        return self._next_page(response, previous_page_params)
 
 
 class UrlPaginatedRequestStrategy(RequestStrategy):
@@ -199,17 +197,12 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
 
             yield response
 
-            next_page_url = self.get_next_page_url(response)
+            next_page_url = self.get_next_page_url(response, previous_page_url=endpoint)
             if next_page_url:
                 endpoint = next_page_url
             else:
                 # No further pages found
                 break
 
-    def get_next_page_url(self, response) -> OptionalDict:
-        try:
-            next_page = self._next_page(response)
-        except Exception:
-            # Unable to get the next page from function.
-            next_page = None
-        return next_page
+    def get_next_page_url(self, response, previous_page_url: str) -> OptionalDict:
+        return self._next_page(response, previous_page_url)

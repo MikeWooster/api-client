@@ -9,12 +9,12 @@ from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from tests.helpers import build_response, client_factory
 
 
-def next_page_param(response):
+def next_page_param(response, previous_page_params):
     if response["next"]:
         return {"page": response["next"]}
 
 
-def next_page_url(response):
+def next_page_url(response, previous_page_url):
     if response["next"]:
         return response["next"]
 
@@ -32,8 +32,12 @@ class UrlPaginatedClient(APIClient):
 
 
 def test_query_parameter_pagination(mock_requests):
-    # Given the response is over two pages
-    response_data = [{"page1": "data", "next": "page2"}, {"page2": "data", "next": None}]
+    # Given the response is over three pages
+    response_data = [
+        {"page1": "data", "next": "page2"},
+        {"page2": "data", "next": "page3"},
+        {"page3": "data", "next": None},
+    ]
     mock_requests.get.side_effect = [build_response(json=page_data) for page_data in response_data]
     client = QueryPaginatedClient(
         authentication_method=NoAuthentication(),
@@ -48,13 +52,15 @@ def test_query_parameter_pagination(mock_requests):
     response = list(client.make_read_request())
 
     # Then two requests are made to get both pages
-    assert mock_requests.get.call_count == 2
-    assert len(response) == 2
+    assert mock_requests.get.call_count == 3
+    assert len(response) == 3
     assert response == response_data
     defaults = {"auth": None, "data": None, "headers": {"Content-type": "application/json"}, "timeout": 10}
+
     expected_call_args = [
         call("http://example.com", params={}, **defaults),
         call("http://example.com", params={"page": "page2"}, **defaults),
+        call("http://example.com", params={"page": "page3"}, **defaults),
     ]
     assert mock_requests.get.call_args_list == expected_call_args
 

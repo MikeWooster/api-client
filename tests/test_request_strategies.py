@@ -22,60 +22,35 @@ def test_setting_and_getting_client():
 
 
 def test_query_param_paginated_strategy_delegates_to_callable(mock_requests):
-    next_page = Mock(side_effect=ValueError("something went wrong"))
+    # Given our next page callable will return a None value
+    next_page = Mock(return_value=None)
 
-    # When the response does not return the next page parameter.
     mock_requests.get.return_value = build_response(json={"foo": "bar"})
 
     strategy = request_strategy_factory(QueryParamPaginatedRequestStrategy, next_page)
 
+    # When we request the page
     response = strategy.get("http://example.com")
 
+    # Then the first page is fetched and the paginator stops
     assert list(response) == [{"foo": "bar"}]
     assert mock_requests.get.call_count == 1
-    next_page.assert_called_once_with({"foo": "bar"})
-
-
-def test_query_param_paginated_strategy_stops_paginating_when_encounters_error(mock_requests):
-    def next_page(response):
-        raise ValueError("something went wrong")
-
-    # When the response does not return the next page parameter.
-    mock_requests.get.return_value = build_response(json={"foo": "bar"})
-
-    strategy = request_strategy_factory(QueryParamPaginatedRequestStrategy, next_page)
-
-    response = strategy.get("http://example.com")
-
-    assert list(response) == [{"foo": "bar"}]
-    assert mock_requests.get.call_count == 1
+    # And the paginator is called with the latest response and the original params
+    next_page.assert_called_once_with({"foo": "bar"}, {})
 
 
 def test_url_paginated_strategy_delegates_to_callable(mock_requests):
-    next_page = Mock(side_effect=ValueError("something went wrong"))
+    # Given our next page callable will return a None value
+    next_page = Mock(return_value=None)
 
-    # When the response does not return the next page parameter.
     mock_requests.get.return_value = build_response(json={"foo": "bar"})
 
     strategy = request_strategy_factory(UrlPaginatedRequestStrategy, next_page)
 
+    # When we request the page
     response = strategy.get("http://example.com")
 
+    # Then the first page is fetched and the paginator stops
     assert list(response) == [{"foo": "bar"}]
     assert mock_requests.get.call_count == 1
-    next_page.assert_called_once_with({"foo": "bar"})
-
-
-def test_url_paginated_strategy_stops_paginating_when_encounters_error(mock_requests):
-    def next_page(response):
-        raise ValueError("something went wrong")
-
-    # When the response does not return the next page parameter.
-    mock_requests.get.return_value = build_response(json={"foo": "bar"})
-
-    strategy = request_strategy_factory(UrlPaginatedRequestStrategy, next_page)
-
-    response = strategy.get("http://example.com")
-
-    assert list(response) == [{"foo": "bar"}]
-    assert mock_requests.get.call_count == 1
+    next_page.assert_called_once_with({"foo": "bar"}, "http://example.com")
