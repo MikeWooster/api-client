@@ -41,25 +41,39 @@ class BaseRequestStrategy:
 
 
 class RequestStrategy(BaseRequestStrategy):
+    """Requests strategy that uses the `requests` lib with a `requests.session`."""
+
+    def set_client(self, client: "APIClient"):
+        super().set_client(client)
+        # Set a global `requests.session` on the parent client instance.
+        if self.get_session() is None:
+            self.set_session(requests.session())
+
+    def get_session(self):
+        return self.get_client().get_session()
+
+    def set_session(self, session: requests.Session):
+        self.get_client().set_session(session)
+
     def post(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data and return response data from POST endpoint."""
-        return self._make_request(requests.post, endpoint, data=data, params=params)
+        return self._make_request(self.get_session().post, endpoint, data=data, params=params)
 
     def get(self, endpoint: str, params: OptionalDict = None):
         """Return response data from GET endpoint."""
-        return self._make_request(requests.get, endpoint, params=params)
+        return self._make_request(self.get_session().get, endpoint, params=params)
 
     def put(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data to overwrite resource and return response data from PUT endpoint."""
-        return self._make_request(requests.put, endpoint, data=data, params=params)
+        return self._make_request(self.get_session().put, endpoint, data=data, params=params)
 
     def patch(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Send data to update resource and return response data from PATCH endpoint."""
-        return self._make_request(requests.patch, endpoint, data=data, params=params)
+        return self._make_request(self.get_session().patch, endpoint, data=data, params=params)
 
     def delete(self, endpoint: str, params: OptionalDict = None):
         """Remove resource with DELETE endpoint."""
-        return self._make_request(requests.delete, endpoint, params=params)
+        return self._make_request(self.get_session().delete, endpoint, params=params)
 
     def _make_request(
         self,
@@ -74,6 +88,7 @@ class RequestStrategy(BaseRequestStrategy):
 
         Delegates response parsing to the response handler.
         """
+        print(">>>", request_method)
         try:
             response = request_method(
                 endpoint,

@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
@@ -25,12 +25,21 @@ class APIClient:
         self._default_headers = {}
         self._default_query_params = {}
         self._default_username_password_authentication = None
+        # A session needs to live at this client level so that all
+        # request strategies have access to the same session.
+        self._session = None
 
         # Set client strategies
         self.set_authentication_method(authentication_method)
         self.set_response_handler(response_handler)
         self.set_request_formatter(request_formatter)
         self.set_request_strategy(RequestStrategy())
+
+    def get_session(self) -> Any:
+        return self._session
+
+    def set_session(self, session: Any):
+        self._session = session
 
     def set_authentication_method(self, authentication_method: BaseAuthenticationMethod):
         if not isinstance(authentication_method, BaseAuthenticationMethod):
