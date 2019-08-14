@@ -1,0 +1,202 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users
+  response:
+    body:
+      string: '[
+        {"userId": 1, "firstName": "Mike", "lastName": "Foo"},
+        {"userId": 2, "firstName": "Sarah", "lastName": "Bar"},
+        {"userId": 3, "firstName": "Barry", "lastName": "Baz"}
+      ]'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/1
+  response:
+    body:
+      string: '{"userId": 1, "firstName": "Mike", "lastName": "Foo"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/2
+  response:
+    body: null
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 500, message: SERVER_ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/2
+  response:
+    body:
+      string: '{"userId": 2, "firstName": "Sarah", "lastName": "Bar"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: POST
+    uri: http://testserver/users
+  response:
+    body:
+      string: '{"userId": 4, "firstName": "Lucy", "lastName": "Qux"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 201, message: CREATED}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: PUT
+    uri: http://testserver/users/4
+  response:
+    body:
+      string: '{"userId": 4, "firstName": "Lucy", "lastName": "Foo"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: PATCH
+    uri: http://testserver/users/4
+  response:
+    body:
+      string: '{"userId": 4, "firstName": "Lucy", "lastName": "Qux"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: DELETE
+    uri: http://testserver/users/4
+  response:
+    body: null
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=1
+  response:
+    body:
+      string: '{
+                   "results": [
+                       {"accountName": "business", "number": "1234"},
+                       {"accountName": "expense", "number": "2345"}
+                   ],
+                   "page": 1,
+                   "nextPage": 2
+               }'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=1&page=2
+  response:
+    body:
+      string: '{
+                   "results": [
+                       {"accountName": "fun", "number": "6544"},
+                       {"accountName": "holiday", "number": "9283"}
+                   ],
+                   "page": 2,
+                   "nextPage": 3
+               }'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=1&page=3
+  response:
+    body:
+      string: '{
+                   "results": [
+                       {"accountName": "gifts", "number": "7827"},
+                       {"accountName": "home", "number": "1259"}
+                   ],
+                   "page": 3,
+                   "nextPage": null
+               }'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 200, message: OK}
+
+version: 1

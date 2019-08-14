@@ -5,7 +5,7 @@ import setuptools
 
 application_dependencies = ["requests>=2.16", "pyyaml", "tenacity"]
 prod_dependencies = []
-test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy"]
+test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock"]
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
 dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]

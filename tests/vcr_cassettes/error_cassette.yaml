@@ -1,0 +1,131 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/1
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 300, message: REDIRECT}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/2
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 399, message: REDIRECT}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/3
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 400, message: CLIENT ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/4
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 499, message: CLIENT ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/5
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 500, message: SERVER ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/6
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 599, message: SERVER ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/7
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 600, message: UNEXPECTED}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/users/8
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 999, message: UNEXPECTED}
+
+version: 1
