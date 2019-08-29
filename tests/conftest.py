@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from typing import NamedTuple
 from unittest.mock import Mock, sentinel
 
 import pytest
@@ -44,8 +44,7 @@ def mock_requests():
         yield _mocker
 
 
-@dataclass
-class MockClient:
+class MockClient(NamedTuple):
     client: Mock
     request_formatter: Mock
     response_handler: Mock
