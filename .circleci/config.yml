@@ -40,6 +40,7 @@ jobs:
             tox -e py36-requests220
             tox -e py36-requests221
             tox -e py36-requests222
+
       - store_artifacts:
           path: test-reports
           destination: test-reports
@@ -69,6 +70,7 @@ jobs:
             tox -e py37-requests220
             tox -e py37-requests221
             tox -e py37-requests222
+
       - store_artifacts:
           path: test-reports
           destination: test-reports

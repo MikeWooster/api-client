@@ -1,4 +1,4 @@
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 import pytest
 
@@ -6,7 +6,7 @@ from apiclient import APIClient, JsonRequestFormatter, JsonResponseHandler, pagi
 from apiclient.authentication_methods import NoAuthentication
 from apiclient.paginators import set_strategy
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
-from tests.helpers import build_response, client_factory
+from tests.helpers import client_factory
 
 
 def next_page_param(response, previous_page_params):
@@ -22,13 +22,13 @@ def next_page_url(response, previous_page_url):
 class QueryPaginatedClient(APIClient):
     @paginated(by_query_params=next_page_param)
     def make_read_request(self):
-        return self.get(endpoint="http://example.com")
+        return self.get(endpoint="mock://testserver.com")
 
 
 class UrlPaginatedClient(APIClient):
     @paginated(by_url=next_page_url)
     def make_read_request(self):
-        return self.get(endpoint="http://example.com")
+        return self.get(endpoint="mock://testserver.com")
 
 
 def test_query_parameter_pagination(mock_requests):
@@ -38,7 +38,15 @@ def test_query_parameter_pagination(mock_requests):
         {"page2": "data", "next": "page3"},
         {"page3": "data", "next": None},
     ]
-    mock_requests.get.side_effect = [build_response(json=page_data) for page_data in response_data]
+    mock_requests.get(
+        "mock://testserver.com",
+        [
+            {"json": {"page1": "data", "next": "page2"}, "status_code": 200},
+            {"json": {"page2": "data", "next": "page3"}, "status_code": 200},
+            {"json": {"page3": "data", "next": None}, "status_code": 200},
+        ],
+    )
+    # mock_requests.get.side_effect = [build_response(json=page_data) for page_data in response_data]
     client = QueryPaginatedClient(
         authentication_method=NoAuthentication(),
         response_handler=JsonResponseHandler,
@@ -52,17 +60,9 @@ def test_query_parameter_pagination(mock_requests):
     response = list(client.make_read_request())
 
     # Then two requests are made to get both pages
-    assert mock_requests.get.call_count == 3
+    assert mock_requests.call_count == 3
     assert len(response) == 3
     assert response == response_data
-    defaults = {"auth": None, "data": None, "headers": {"Content-type": "application/json"}, "timeout": 10}
-
-    expected_call_args = [
-        call("http://example.com", params={}, **defaults),
-        call("http://example.com", params={"page": "page2"}, **defaults),
-        call("http://example.com", params={"page": "page3"}, **defaults),
-    ]
-    assert mock_requests.get.call_args_list == expected_call_args
 
     # And the clients paginator is reset back to the original.
     assert client.get_request_strategy() == original_strategy
@@ -70,8 +70,16 @@ def test_query_parameter_pagination(mock_requests):
 
 def test_url_parameter_pagination(mock_requests):
     # Given the response is over two pages
-    response_data = [{"page1": "data", "next": "http://example.com/page2"}, {"page2": "data", "next": None}]
-    mock_requests.get.side_effect = [build_response(json=page_data) for page_data in response_data]
+    mock_requests.get(
+        "mock://testserver.com",
+        json={"page1": "data", "next": "mock://testserver.com/page2"},
+        status_code=200,
+    )
+    mock_requests.get("mock://testserver.com/page2", json={"page2": "data", "next": None}, status_code=200)
+    response_data = [
+        {"page1": "data", "next": "mock://testserver.com/page2"},
+        {"page2": "data", "next": None},
+    ]
     client = UrlPaginatedClient(
         authentication_method=NoAuthentication(),
         response_handler=JsonResponseHandler,
@@ -85,20 +93,8 @@ def test_url_parameter_pagination(mock_requests):
     response = list(client.make_read_request())
 
     # Then two requests are made to get both pages
-    assert mock_requests.get.call_count == 2
+    assert mock_requests.call_count == 2
     assert response == response_data
-    defaults = {
-        "auth": None,
-        "data": None,
-        "headers": {"Content-type": "application/json"},
-        "params": {},
-        "timeout": 10,
-    }
-    expected_call_args = [
-        call("http://example.com", **defaults),
-        call("http://example.com/page2", **defaults),
-    ]
-    assert mock_requests.get.call_args_list == expected_call_args
 
     # And the clients paginator is reset back to the original.
     assert client.get_request_strategy() == original_strategy
