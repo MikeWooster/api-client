@@ -33,20 +33,14 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            tox -e py36-requests216-tenacity50
-            tox -e py36-requests216-tenacity51
-            tox -e py36-requests217-tenacity50
-            tox -e py36-requests217-tenacity51
-            tox -e py36-requests218-tenacity50
-            tox -e py36-requests218-tenacity51
-            tox -e py36-requests219-tenacity50
-            tox -e py36-requests219-tenacity51
-            tox -e py36-requests220-tenacity50
-            tox -e py36-requests220-tenacity51
-            tox -e py36-requests221-tenacity50
-            tox -e py36-requests221-tenacity51
-            tox -e py36-requests222-tenacity50
-            tox -e py36-requests222-tenacity51
+            tox -e py36-requests216
+            tox -e py36-requests217
+            tox -e py36-requests218
+            tox -e py36-requests219
+            tox -e py36-requests220
+            tox -e py36-requests221
+            tox -e py36-requests222
+
       - store_artifacts:
           path: test-reports
           destination: test-reports
@@ -69,20 +63,14 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            tox -e py37-requests216-tenacity50
-            tox -e py37-requests216-tenacity51
-            tox -e py37-requests217-tenacity50
-            tox -e py37-requests217-tenacity51
-            tox -e py37-requests218-tenacity50
-            tox -e py37-requests218-tenacity51
-            tox -e py37-requests219-tenacity50
-            tox -e py37-requests219-tenacity51
-            tox -e py37-requests220-tenacity50
-            tox -e py37-requests220-tenacity51
-            tox -e py37-requests221-tenacity50
-            tox -e py37-requests221-tenacity51
-            tox -e py37-requests222-tenacity50
-            tox -e py37-requests222-tenacity51
+            tox -e py37-requests216
+            tox -e py37-requests217
+            tox -e py37-requests218
+            tox -e py37-requests219
+            tox -e py37-requests220
+            tox -e py37-requests221
+            tox -e py37-requests222
+
       - store_artifacts:
           path: test-reports
           destination: test-reports

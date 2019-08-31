@@ -72,14 +72,14 @@ def testing_retry_for_status_code(status_codes=None):
 @pytest.mark.parametrize(
     "retry_state,max_wait",
     [
-        (make_retry_state(previous_attempt_number=0, delay_since_first_attempt=0), 0.25),
-        (make_retry_state(previous_attempt_number=1, delay_since_first_attempt=0), 0.5),
-        (make_retry_state(previous_attempt_number=2, delay_since_first_attempt=0), 1),
-        (make_retry_state(previous_attempt_number=3, delay_since_first_attempt=0), 2),
-        (make_retry_state(previous_attempt_number=4, delay_since_first_attempt=0), 4),
-        (make_retry_state(previous_attempt_number=5, delay_since_first_attempt=0), 8),
-        (make_retry_state(previous_attempt_number=6, delay_since_first_attempt=0), 16),
-        (make_retry_state(previous_attempt_number=7, delay_since_first_attempt=0), 30),
+        (make_retry_state(previous_attempt_number=1, delay_since_first_attempt=0), 0.25),
+        (make_retry_state(previous_attempt_number=2, delay_since_first_attempt=0), 0.5),
+        (make_retry_state(previous_attempt_number=3, delay_since_first_attempt=0), 1),
+        (make_retry_state(previous_attempt_number=4, delay_since_first_attempt=0), 2),
+        (make_retry_state(previous_attempt_number=5, delay_since_first_attempt=0), 4),
+        (make_retry_state(previous_attempt_number=6, delay_since_first_attempt=0), 8),
+        (make_retry_state(previous_attempt_number=7, delay_since_first_attempt=0), 16),
+        (make_retry_state(previous_attempt_number=8, delay_since_first_attempt=0), 30),
     ],
 )
 def test_exponential_retry_backoff(retry_state, max_wait):
@@ -89,7 +89,7 @@ def test_exponential_retry_backoff(retry_state, max_wait):
         assert min_wait <= func.retry.wait(retry_state) <= max_wait
 
 
-@pytest.mark.parametrize("previous_attempt_number", [7, 8, 30, 1_000_000])
+@pytest.mark.parametrize("previous_attempt_number", [8, 9, 30, 1_000_000])
 def test_exponential_retry_backoff_not_greater_than_30s(previous_attempt_number):
     retry_state = make_retry_state(
         previous_attempt_number=previous_attempt_number, delay_since_first_attempt=0
