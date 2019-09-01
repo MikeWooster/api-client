@@ -175,4 +175,4 @@ def test_client_clone_method():
     client = client_factory(build_with="json")
     client.set_session(sentinel.session)
     new_client = client.clone()
-    assert new_client.get_session() == client.get_session()
+    assert new_client.get_session() is client.get_session()

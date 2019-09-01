@@ -1,4 +1,3 @@
-import copy
 import logging
 from typing import Any, Optional, Type
 
@@ -48,6 +47,9 @@ class APIClient:
             )
         self._authentication_method = authentication_method
 
+    def get_authentication_method(self) -> BaseAuthenticationMethod:
+        return self._authentication_method
+
     def get_response_handler(self) -> Type[BaseResponseHandler]:
         return self._response_handler
 
@@ -91,7 +93,14 @@ class APIClient:
 
     def clone(self):
         """Enable Prototype pattern on client."""
-        return copy.deepcopy(self)
+        new_client = APIClient(
+            authentication_method=self.get_authentication_method(),
+            response_handler=self.get_response_handler(),
+            request_formatter=self.get_request_formatter(),
+        )
+        new_client.set_request_strategy(self.get_request_strategy())
+        new_client.set_session(self.get_session())
+        return new_client
 
     def create(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Provide backwards compatibility adaptor from create() -> post()."""
