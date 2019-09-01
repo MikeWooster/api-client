@@ -41,6 +41,22 @@ def assert_mock_client_called_once(mock_client, expected_request_data):
     assert mock_client.client.get_request_timeout.call_count == 1
 
 
+def test_request_strategy_sets_session_on_parent_when_not_already_set(mock_client):
+    mock_client.client.get_session.return_value = None
+    strategy = RequestStrategy()
+    strategy.set_client(mock_client.client)
+    mock_client.client.get_session.assert_called_once_with()
+    mock_client.client.set_session.assert_called_once()
+
+
+def test_request_strategy_does_not_set_session_if_already_set(mock_client):
+    mock_client.client.get_session.return_value = sentinel.session
+    strategy = RequestStrategy()
+    strategy.set_client(mock_client.client)
+    mock_client.client.get_session.assert_called_once_with()
+    mock_client.client.set_session.assert_not_called()
+
+
 def test_request_strategy_get_method_delegates_to_parent_handlers(mock_requests, mock_client):
     mock_requests.get("mock://testserver.com", json={"active": True}, status_code=200)
 

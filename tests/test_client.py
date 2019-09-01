@@ -5,7 +5,7 @@ import pytest
 
 from apiclient import NoAuthentication
 from apiclient.client import LOG as client_logger
-from apiclient.client import BaseClient
+from apiclient.client import APIClient, BaseClient
 from apiclient.request_strategies import BaseRequestStrategy
 from tests.helpers import (
     MinimalClient,
@@ -163,3 +163,16 @@ def test_client_initialization_deprecation_warning_when_using_baseclient(caplog)
         "please use `APIClient` instead."
     )
     assert expected in caplog.messages
+
+
+def test_client_get_and_set_session():
+    client = APIClient()
+    client.set_session(sentinel.session)
+    assert client.get_session() == sentinel.session
+
+
+def test_client_clone_method():
+    client = client_factory(build_with="json")
+    client.set_session(sentinel.session)
+    new_client = client.clone()
+    assert new_client.get_session() is client.get_session()

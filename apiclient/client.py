@@ -1,6 +1,5 @@
-import copy
 import logging
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
@@ -25,6 +24,9 @@ class APIClient:
         self._default_headers = {}
         self._default_query_params = {}
         self._default_username_password_authentication = None
+        # A session needs to live at this client level so that all
+        # request strategies have access to the same session.
+        self._session = None
 
         # Set client strategies
         self.set_authentication_method(authentication_method)
@@ -32,12 +34,21 @@ class APIClient:
         self.set_request_formatter(request_formatter)
         self.set_request_strategy(RequestStrategy())
 
+    def get_session(self) -> Any:
+        return self._session
+
+    def set_session(self, session: Any):
+        self._session = session
+
     def set_authentication_method(self, authentication_method: BaseAuthenticationMethod):
         if not isinstance(authentication_method, BaseAuthenticationMethod):
             raise RuntimeError(
                 "provided authentication_method must be an instance of BaseAuthenticationMethod."
             )
         self._authentication_method = authentication_method
+
+    def get_authentication_method(self) -> BaseAuthenticationMethod:
+        return self._authentication_method
 
     def get_response_handler(self) -> Type[BaseResponseHandler]:
         return self._response_handler
@@ -82,7 +93,14 @@ class APIClient:
 
     def clone(self):
         """Enable Prototype pattern on client."""
-        return copy.deepcopy(self)
+        new_client = APIClient(
+            authentication_method=self.get_authentication_method(),
+            response_handler=self.get_response_handler(),
+            request_formatter=self.get_request_formatter(),
+        )
+        new_client.set_request_strategy(self.get_request_strategy())
+        new_client.set_session(self.get_session())
+        return new_client
 
     def create(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Provide backwards compatibility adaptor from create() -> post()."""

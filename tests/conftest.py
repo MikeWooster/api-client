@@ -3,6 +3,7 @@ from typing import NamedTuple
 from unittest.mock import Mock, sentinel
 
 import pytest
+import requests
 import requests_mock
 import vcr
 
@@ -60,6 +61,7 @@ def mock_client():
     _mock_client.get_default_headers.return_value = {}
     _mock_client.get_default_username_password_authentication.return_value = None
     _mock_client.get_request_timeout.return_value = 30.0
+    _mock_client.get_session.return_value = requests.session()
     mock_request_formatter.format.return_value = {}
     _mock_client.get_request_formatter.return_value = mock_request_formatter
     mock_response_handler.get_request_data.return_value = sentinel.result
