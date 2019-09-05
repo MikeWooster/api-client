@@ -6,6 +6,7 @@ from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormat
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
 from apiclient.utils.typing import OptionalDict
+from apiclient.utils.warnings import deprecation_warning
 
 LOG = logging.getLogger(__name__)
 
@@ -104,22 +105,22 @@ class APIClient:
 
     def create(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Provide backwards compatibility adaptor from create() -> post()."""
-        LOG.warning("`create()` will be deprecated in version 1.2. use `post()` instead.")
+        deprecation_warning("'create()' will be deprecated in version 1.2. use 'post()' instead.")
         return self.post(endpoint, data=data, params=params)
 
     def read(self, endpoint: str, params: OptionalDict = None):
         """Provide backwards compatibility adaptor from read() -> get()."""
-        LOG.warning("`read()` will be deprecated in version 1.2. use `get()` instead.")
+        deprecation_warning("`read()` will be deprecated in version 1.2. use `get()` instead.")
         return self.get(endpoint, params=params)
 
     def replace(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Provide backwards compatibility adaptor from replace() -> put()."""
-        LOG.warning("`replace()` will be deprecated in version 1.2. use `put()` instead.")
+        deprecation_warning("`replace()` will be deprecated in version 1.2. use `put()` instead.")
         return self.put(endpoint, data=data, params=params)
 
     def update(self, endpoint: str, data: dict, params: OptionalDict = None):
         """Provide backwards compatibility adaptor from update() -> patch()."""
-        LOG.warning("`update()` will be deprecated in version 1.2. use `patch()` instead.")
+        deprecation_warning("`update()` will be deprecated in version 1.2. use `patch()` instead.")
         return self.patch(endpoint, data=data, params=params)
 
     def post(self, endpoint: str, data: dict, params: OptionalDict = None):
@@ -152,7 +153,7 @@ class BaseClient(APIClient):
     """Provide backwards compatibility for BaseClient usage until it is removed."""
 
     def __init__(self, *args, **kwargs):
-        LOG.warning(
+        deprecation_warning(
             "`BaseClient` has been deprecated in version 1.1.4 and will be removed in version 1.2.0, "
             "please use `APIClient` instead."
         )
