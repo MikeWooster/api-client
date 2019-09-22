@@ -1,10 +1,13 @@
-# Python Client Abstraction
-I have often found that I am constantly writing similar clients to
-in order to provide an abstraction around a third party API.
+# Python API Client
 
-This client abstraction aims to reduce the overhead of writing the client,
-and should allow the consumer of the APIs to focus on the high level
-implementation, rather than the design of the client itself.
+A client for communicating with an api should be a clean abstraction
+over the third part api you are communicating with. It should be easy to 
+understand and have the sole responsibility of calling the endpoints and
+returning data.
+
+To achieve this, `APIClient` takes care of the other (often duplicated) 
+responsibilities, such as authentication and response handling, moving 
+that code away from the clean abstraction you have designed.
 
 ## Quick links
 1. [Installation](#Installation)
@@ -251,6 +254,32 @@ that require such.
 ```
 client = ClientImplementation(
     authentication_method=BasicAuthentication(username="foo", password="secret_value"),
+    response_handler=...,
+    request_formatter=...,
+)
+```
+
+### `CookieAuthentication`
+This authentication method allows a user to specify a url which is used
+to authenticate an initial request, made at APIClient initialization,
+with the authorization tokens then persisted for the duration of the 
+client instance in cookie storage.
+
+These cookies use the `http.cookiejar.CookieJar()` and are set on the
+session so that all future requests contain these cookies.
+
+As the method of authentication at the endpoint is not standardised
+across API's, the authentication method can be customized using one of
+the already defined authentication methods; `QueryParameterAuthentication`, 
+`HeaderAuthentication`, `BasicAuthentication`.
+
+```
+client = ClientImplementation(
+    authentication_method=(
+        CookieAuthentication(
+            auth_url="https://example.com/authenticate",
+            authentication=HeaderAuthentication("1234-secret-key"),
+        ),
     response_handler=...,
     request_formatter=...,
 )

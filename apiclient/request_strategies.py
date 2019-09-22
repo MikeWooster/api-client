@@ -55,25 +55,25 @@ class RequestStrategy(BaseRequestStrategy):
     def set_session(self, session: requests.Session):
         self.get_client().set_session(session)
 
-    def post(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
-        return self._make_request(self.get_session().post, endpoint, data=data, params=params)
+        return self._make_request(self.get_session().post, endpoint, data=data, params=params, **kwargs)
 
-    def get(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
         """Return response data from GET endpoint."""
-        return self._make_request(self.get_session().get, endpoint, params=params)
+        return self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
 
-    def put(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
-        return self._make_request(self.get_session().put, endpoint, data=data, params=params)
+        return self._make_request(self.get_session().put, endpoint, data=data, params=params, **kwargs)
 
-    def patch(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
-        return self._make_request(self.get_session().patch, endpoint, data=data, params=params)
+        return self._make_request(self.get_session().patch, endpoint, data=data, params=params, **kwargs)
 
-    def delete(self, endpoint: str, params: OptionalDict = None):
+    def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
         """Remove resource with DELETE endpoint."""
-        return self._make_request(self.get_session().delete, endpoint, params=params)
+        return self._make_request(self.get_session().delete, endpoint, params=params, **kwargs)
 
     def _make_request(
         self,
@@ -179,14 +179,14 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
     def __init__(self, next_page: Callable):
         self._next_page = next_page
 
-    def get(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
         if params is None:
             params = {}
 
         while True:
             this_page_params = deepcopy(params)
 
-            response = super().get(endpoint, params=this_page_params)
+            response = super().get(endpoint, params=this_page_params, **kwargs)
 
             yield response
             next_page_params = self.get_next_page_params(response, previous_page_params=this_page_params)
@@ -206,9 +206,9 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
     def __init__(self, next_page: Callable):
         self._next_page = next_page
 
-    def get(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
         while True:
-            response = super().get(endpoint, params=params)
+            response = super().get(endpoint, params=params, **kwargs)
 
             yield response
 

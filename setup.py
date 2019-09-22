@@ -18,7 +18,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="api-client",
-    version="1.1.6",
+    version="1.1.7",
     description="Separate the high level client implementation from the underlying CRUD.",
     long_description=long_description,
     long_description_content_type="text/markdown",
