@@ -1,3 +1,5 @@
+import http.cookiejar
+
 import pytest
 
 from apiclient import (
@@ -7,8 +9,9 @@ from apiclient import (
     NoAuthentication,
     QueryParameterAuthentication,
 )
-from apiclient.request_formatters import BaseRequestFormatter
-from apiclient.response_handlers import BaseResponseHandler
+from apiclient.authentication_methods import CookieAuthentication
+from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
+from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
 
 
 def test_no_authentication_method_does_not_alter_client():
@@ -87,3 +90,19 @@ def test_basic_authentication_alters_client():
     assert client.get_default_query_params() == {}
     assert client.get_default_headers() == {}
     assert client.get_default_username_password_authentication() == ("uname", "password")
+
+
+def test_cookie_authentication_makes_request_on_client_initialization(mock_requests):
+    cookiejar = http.cookiejar.CookieJar()
+    mocker = mock_requests.get("http://example.com/authenticate", status_code=200, cookies=cookiejar)
+
+    APIClient(
+        authentication_method=CookieAuthentication(
+            auth_url="http://example.com/authenticate", authentication=HeaderAuthentication(token="foo")
+        ),
+        response_handler=RequestsResponseHandler,
+        request_formatter=NoOpRequestFormatter,
+    )
+    assert mocker.called
+    assert mocker.call_count == 1
+    # TODO: is there a way we can test the cookiejar contents after making the request?

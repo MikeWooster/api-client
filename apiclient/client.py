@@ -35,6 +35,9 @@ class APIClient:
         self.set_request_formatter(request_formatter)
         self.set_request_strategy(RequestStrategy())
 
+        # Perform any one time authentication required by api
+        self._authentication_method.perform_initial_auth(self)
+
     def get_session(self) -> Any:
         return self._session
 
@@ -123,30 +126,30 @@ class APIClient:
         deprecation_warning("`update()` will be deprecated in version 1.2. use `patch()` instead.")
         return self.patch(endpoint, data=data, params=params)
 
-    def post(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
         LOG.info("POST %s with %s", endpoint, data)
-        return self.get_request_strategy().post(endpoint, data=data, params=params)
+        return self.get_request_strategy().post(endpoint, data=data, params=params, **kwargs)
 
-    def get(self, endpoint: str, params: OptionalDict = None):
+    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
         """Return response data from GET endpoint."""
         LOG.info("GET %s", endpoint)
-        return self.get_request_strategy().get(endpoint, params=params)
+        return self.get_request_strategy().get(endpoint, params=params, **kwargs)
 
-    def put(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
         LOG.info("PUT %s with %s", endpoint, data)
-        return self.get_request_strategy().put(endpoint, data=data, params=params)
+        return self.get_request_strategy().put(endpoint, data=data, params=params, **kwargs)
 
-    def patch(self, endpoint: str, data: dict, params: OptionalDict = None):
+    def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
         LOG.info("PATCH %s with %s", endpoint, data)
-        return self.get_request_strategy().patch(endpoint, data=data, params=params)
+        return self.get_request_strategy().patch(endpoint, data=data, params=params, **kwargs)
 
-    def delete(self, endpoint: str, params: OptionalDict = None):
+    def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
         """Remove resource with DELETE endpoint."""
         LOG.info("DELETE %s", endpoint)
-        return self.get_request_strategy().delete(endpoint, params=params)
+        return self.get_request_strategy().delete(endpoint, params=params, **kwargs)
 
 
 class BaseClient(APIClient):

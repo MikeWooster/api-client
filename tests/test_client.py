@@ -51,9 +51,11 @@ def test_get_method_delegates_to_request_strategy():
     client = client_factory()
     client.set_request_strategy(mock_request_strategy)
 
-    response = client.get(sentinel.url, params=sentinel.params)
+    response = client.get(sentinel.url, params=sentinel.params, headers=sentinel.headers)
 
-    mock_request_strategy.get.assert_called_once_with(sentinel.url, params=sentinel.params)
+    mock_request_strategy.get.assert_called_once_with(
+        sentinel.url, params=sentinel.params, headers=sentinel.headers
+    )
     assert response == sentinel.response
 
 
@@ -63,10 +65,12 @@ def test_post_method_delegates_to_request_strategy():
     client = client_factory()
     client.set_request_strategy(mock_request_strategy)
 
-    response = client.post(sentinel.url, data=sentinel.data, params=sentinel.params)
+    response = client.post(
+        sentinel.url, data=sentinel.data, params=sentinel.params, headers=sentinel.headers
+    )
 
     mock_request_strategy.post.assert_called_once_with(
-        sentinel.url, data=sentinel.data, params=sentinel.params
+        sentinel.url, data=sentinel.data, params=sentinel.params, headers=sentinel.headers
     )
     assert response == sentinel.response
 
@@ -77,10 +81,10 @@ def test_put_method_delegates_to_request_strategy():
     client = client_factory()
     client.set_request_strategy(mock_request_strategy)
 
-    response = client.put(sentinel.url, data=sentinel.data, params=sentinel.params)
+    response = client.put(sentinel.url, data=sentinel.data, params=sentinel.params, headers=sentinel.headers)
 
     mock_request_strategy.put.assert_called_once_with(
-        sentinel.url, data=sentinel.data, params=sentinel.params
+        sentinel.url, data=sentinel.data, params=sentinel.params, headers=sentinel.headers
     )
     assert response == sentinel.response
 
@@ -91,10 +95,12 @@ def test_patch_method_delegates_to_request_strategy():
     client = client_factory()
     client.set_request_strategy(mock_request_strategy)
 
-    response = client.patch(sentinel.url, data=sentinel.data, params=sentinel.params)
+    response = client.patch(
+        sentinel.url, data=sentinel.data, params=sentinel.params, headers=sentinel.headers
+    )
 
     mock_request_strategy.patch.assert_called_once_with(
-        sentinel.url, data=sentinel.data, params=sentinel.params
+        sentinel.url, data=sentinel.data, params=sentinel.params, headers=sentinel.headers
     )
     assert response == sentinel.response
 
@@ -105,9 +111,11 @@ def test_delete_method_delegates_to_request_strategy():
     client = client_factory()
     client.set_request_strategy(mock_request_strategy)
 
-    response = client.delete(sentinel.url, params=sentinel.params)
+    response = client.delete(sentinel.url, params=sentinel.params, headers=sentinel.headers)
 
-    mock_request_strategy.delete.assert_called_once_with(sentinel.url, params=sentinel.params)
+    mock_request_strategy.delete.assert_called_once_with(
+        sentinel.url, params=sentinel.params, headers=sentinel.headers
+    )
     assert response == sentinel.response
 
 

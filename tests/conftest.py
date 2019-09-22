@@ -40,7 +40,7 @@ def error_cassette():
 
 
 @pytest.fixture
-def mock_requests():
+def mock_requests() -> requests_mock.Mocker:
     with requests_mock.mock() as _mocker:
         yield _mocker
 
