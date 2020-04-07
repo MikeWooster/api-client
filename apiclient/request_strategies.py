@@ -88,7 +88,6 @@ class RequestStrategy(BaseRequestStrategy):
 
         Delegates response parsing to the response handler.
         """
-        print(">>>", request_method)
         try:
             response = request_method(
                 endpoint,
