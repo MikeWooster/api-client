@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 
-from apiclient.json import json_field, unmarshal
+import pytest
+
+from apiclient.json import UnmarshalError, json_field, unmarshal
 
 
-def test_marshal():
+def test_unmarshal():
     @dataclass
     class Item:
         sub_key_1: int = json_field(json="subKey1")
@@ -51,7 +53,7 @@ def test_marshal():
     assert got == want
 
 
-def test_iterable_json():
+def test_iterable_json_with_optional_fields():
     @dataclass
     class Item:
         first_val: str = json_field(json="firstVal")
@@ -72,7 +74,30 @@ def test_iterable_json():
     ]
 
     got = unmarshal(json, List[Item])
+    assert got == want
 
+
+def test_iterable_json_no_optional_fields():
+    @dataclass
+    class Item:
+        first_val: str = json_field(json="firstVal")
+        second_val: int = json_field(json="secondVal")
+        third_val: float = json_field(json="thirdVal")
+        fourth_val: str = json_field(json="fourthVal")
+
+    json = [
+        {"firstVal": "foo", "secondVal": 123, "thirdVal": 456.789, "fourthVal": "4ping"},
+        {"firstVal": "bar", "secondVal": 654, "thirdVal": 555.241, "fourthVal": "pong"},
+        {"firstVal": "baz", "secondVal": 987, "thirdVal": 111.324, "fourthVal": "8num"},
+    ]
+
+    want = [
+        Item(first_val="foo", second_val=123, third_val=456.789, fourth_val="4ping"),
+        Item(first_val="bar", second_val=654, third_val=555.241, fourth_val="pong"),
+        Item(first_val="baz", second_val=987, third_val=111.324, fourth_val="8num"),
+    ]
+
+    got = unmarshal(json, List[Item])
     assert got == want
 
 
@@ -152,3 +177,67 @@ def test_simple_nesting_of_objects():
     got = unmarshal(json, Parent)
 
     assert got == want
+
+
+def test_simple_object_with_simple_array_item():
+    @dataclass
+    class Item:
+        items: List[str] = json_field(json="items")
+
+    json = {"items": ["elem1", "elem2", "elem3"]}
+
+    want = Item(items=["elem1", "elem2", "elem3"])
+    got = unmarshal(json, Item)
+
+    assert got == want
+
+
+def test_simple_object_with_nullable_key():
+    @dataclass
+    class Item:
+        normal_val: str = json_field(json="normalVal")
+        optional_val: Optional[str] = json_field(json="optionalVal")
+
+    json = {"normalVal": "value", "optionalVal": None}
+
+    want = Item(normal_val="value", optional_val=None)
+    got = unmarshal(json, Item)
+
+    assert got == want
+
+
+@pytest.mark.parametrize("json,container", [("foo", str), (123, int), (456.829, float),])
+def test_works_with_primitives(json, container):
+    # primitives should return the original result
+
+    got = unmarshal(json, container)
+    assert got == json
+
+
+def test_dataclass_invalid_for_json_types():
+    # we do not accept a union that includes a type of list or dict. json structure needs to be explicit.
+    @dataclass
+    class DictItem:
+        val: Union[str, dict]
+
+    @dataclass
+    class ListItem:
+        val: Union[str, list]
+
+    json = {"val": "hello"}
+
+    want = (
+        "Invalid schema. schema = typing.Union[str, dict], data = <class 'str'>. "
+        "Unions cannot contain dict or list items in a schema."
+    )
+    with pytest.raises(UnmarshalError) as exc_info:
+        unmarshal(json, DictItem)
+    assert str(exc_info.value) == want
+
+    want = (
+        "Invalid schema. schema = typing.Union[str, list], data = <class 'str'>. "
+        "Unions cannot contain dict or list items in a schema."
+    )
+    with pytest.raises(UnmarshalError) as exc_info:
+        unmarshal(json, ListItem)
+    assert str(exc_info.value) == want

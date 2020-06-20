@@ -1,12 +1,12 @@
 import dataclasses
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
 
 from apiclient.utils.typing import JsonType
 
 T = TypeVar("T")
 
 
-PRIMITIVES = {str, int, float}
+PRIMITIVES = {str, int, float, type(None)}
 
 
 def json_field(*args, json: str = None, metadata: dict = None, **kwargs):
@@ -48,15 +48,6 @@ class SchemaEnd:
 def unmarshal(response: JsonType, schema: Generic[T]) -> T:
     unmarshaller = _Unmarshaller(response, schema)
     return unmarshaller.unmarshal()
-    # if _is_list(schema):
-    #     if type(response) != list:
-    #         raise MarshalError("Expecting response element to be an array: {elem}".format(elem=response))
-    #     # The type of schema should be the first arg of the list
-    #     inner_schema = schema.__args__[0]
-    #
-    #     return [unmarshal(e, inner_schema) for e in response]
-    # else:
-    #     return _unmarshall(response, schema)
 
 
 @dataclasses.dataclass
@@ -99,6 +90,13 @@ class _Unmarshaller:
     def __init__(self, response, schema):
         self.result = [ResultContainer(data=response, schema=schema, parent=None)]
         self.dump = []
+        self.processors: Dict[Any, Callable[[ResultContainer], None]] = {
+            list: self.process_list,
+            dict: self.process_dict,
+        }
+        # Add each primitive individually
+        for t in PRIMITIVES:
+            self.processors[t] = self.process_primitive
 
     def unmarshal(self):
         item = None
@@ -109,11 +107,8 @@ class _Unmarshaller:
                 # If this is the first item and it has already been cleaned then we don't need to do anything
                 continue
 
-            if item.schema_type == list:
-                self.process_list(item)
-
-            elif item.schema_type == dict:
-                self.process_dict(item)
+            processor = self.processors[item.item_type]
+            processor(item)
 
             self.promote()
 
@@ -132,12 +127,22 @@ class _Unmarshaller:
         if item.cleaned:
             return
 
-        if item.item_type != item.schema_type:
-            raise UnmarshalError(
-                "Schema does not match type. schema = {schema}, data = {data}".format(
-                    schema=item.schema, data=type(item.data)
+        errmsg = "Invalid schema. schema = {schema}, data = {data}".format(
+            schema=item.schema, data=item.item_type
+        )
+
+        if item.schema_type is Union:
+            if dict in item.schema.__args__ or list in item.schema.__args__:
+                # including dict/list in a union type in a schema is invalid.
+                raise UnmarshalError(
+                    "{prefix}. Unions cannot contain dict or list items in a schema.".format(prefix=errmsg)
                 )
-            )
+
+            if item.item_type not in item.schema.__args__:
+                raise UnmarshalError(errmsg)
+
+        elif item.item_type != item.schema_type:
+            raise UnmarshalError(errmsg)
 
     def process_list(self, item: ResultContainer):
         # Need to append to an intermediary list in order to preserve the final list order.
@@ -186,10 +191,20 @@ class _Unmarshaller:
 
         for data_key, v in item.data.items():
             schema_type = item.schema.__annotations__[data_key]
-            if schema_type not in PRIMITIVES:
-                self.dump.append(ResultContainer(data=v, schema=schema_type, parent=data_key))
+            child = ResultContainer(data=v, schema=schema_type, parent=data_key)
+            if type(v) not in PRIMITIVES:
+                self.dump.append(child)
+            else:
+                # We want to validate that the primatives are actually using the specified schema
+                self.validate_schema(child)
 
         return item
+
+    def process_primitive(self, item: ResultContainer):
+        # Just need to set the cleaned flag for a primtive and put it back on the list
+        item.cleaned = True
+        item.unmarshalled = True
+        self.result.append(item)
 
     def promote(self):
         # promote combines the last element with it's parents.
