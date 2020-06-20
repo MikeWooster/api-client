@@ -64,7 +64,8 @@ class ResultContainer:
     data: JsonType
     schema: Any
     parent: Optional[str]
-    processed: bool = False
+    cleaned: bool = False
+    unmarshalled: bool = False
 
     @property
     def schema_type(self):
@@ -104,8 +105,8 @@ class _Unmarshaller:
         while self.result:
             item = self.get_item()
 
-            if len(self.result) == 0 and item.processed:
-                # If this is the first item and it has already been processed then we don't need to do anything
+            if len(self.result) == 0 and item.cleaned and item.unmarshalled:
+                # If this is the first item and it has already been cleaned then we don't need to do anything
                 continue
 
             if item.schema_type == list:
@@ -128,12 +129,14 @@ class _Unmarshaller:
 
     @staticmethod
     def validate_schema(item: ResultContainer):
-        if item.processed:
+        if item.cleaned:
             return
 
         if item.item_type != item.schema_type:
             raise UnmarshalError(
-                "Schema does not match type. schema = {0.schema}, data = {0.data}".format(item)
+                "Schema does not match type. schema = {schema}, data = {data}".format(
+                    schema=item.schema, data=type(item.data)
+                )
             )
 
     def process_list(self, item: ResultContainer):
@@ -146,11 +149,25 @@ class _Unmarshaller:
             self.dump.append(rev.pop())
 
         # Put original (now empty item) back onto the result queue
-        item.processed = True
+        item.cleaned = True
+        item.unmarshalled = True
         self.result.append(item)
 
     def process_dict(self, item: ResultContainer):
-        # Go through each known field and fix the keys in the original dictionary
+        if not item.cleaned:
+            # Go through each known field and fix the keys in the original dictionary
+            item = self.clean_item(item)
+
+        if not self.dump:
+            # This item has no children, we can safely unmarshal it to the specified datatype
+            item.unmarshalled = True
+            item.data = item.schema(**item.data)
+
+        item.cleaned = True
+        self.result.append(item)
+
+    def clean_item(self, item: ResultContainer) -> ResultContainer:
+        # Clean up the item (only called for dicts)
         for schema_key, field in item.schema_fields.items():
             json_key = get_json_key_for_item(field, item)
 
@@ -171,13 +188,8 @@ class _Unmarshaller:
             schema_type = item.schema.__annotations__[data_key]
             if schema_type not in PRIMITIVES:
                 self.dump.append(ResultContainer(data=v, schema=schema_type, parent=data_key))
-        breakpoint()
-        if not self.dump:
-            # This item has no children, we can safely unmarshal it to the specified datatype
-            item.data = item.schema(**item.data)
 
-        item.processed = True
-        self.result.append(item)
+        return item
 
     def promote(self):
         # promote combines the last element with it's parents.
@@ -191,14 +203,14 @@ class _Unmarshaller:
             item = self.result.pop()
             prev = self.result.pop()
 
-            if item.processed is False:
+            if item.cleaned is False:
                 # This can happen when dealing with list of objects. we still need to unmarshall this data
                 # putting both back on the result queue for processing and ending the promotion stage
                 self.result.append(prev)
                 self.result.append(item)
                 break
 
-            if prev.processed is False:
+            if prev.cleaned is False:
                 # Previous item still needs processing
                 self.dump.append(prev)
                 self.result.append(item)
