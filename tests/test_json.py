@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 import pytest
 
-from apiclient.json import UnmarshalError, json_field, unmarshal
+from apiclient.json import UnmarshalError, json_field, unmarshal, unmarshal_response
 
 
 def test_unmarshal():
@@ -206,7 +206,7 @@ def test_simple_object_with_nullable_key():
     assert got == want
 
 
-@pytest.mark.parametrize("json,container", [("foo", str), (123, int), (456.829, float),])
+@pytest.mark.parametrize("json,container", [("foo", str), (123, int), (456.829, float)])
 def test_works_with_primitives(json, container):
     # primitives should return the original result
 
@@ -241,3 +241,81 @@ def test_dataclass_invalid_for_json_types():
     with pytest.raises(UnmarshalError) as exc_info:
         unmarshal(json, ListItem)
     assert str(exc_info.value) == want
+
+
+def test_unexpected_type_in_union():
+    @dataclass
+    class Item:
+        val: Union[float, int]
+
+    json = {"val": "test"}
+
+    with pytest.raises(UnmarshalError) as exc_info:
+        unmarshal(json, Item)
+    assert str(exc_info.value) == "Invalid schema. schema = typing.Union[float, int], data = <class 'str'>"
+
+
+def test_unexpected_type():
+    @dataclass
+    class Item:
+        val: str
+
+    json = {"val": 1.234}
+
+    with pytest.raises(UnmarshalError) as exc_info:
+        unmarshal(json, Item)
+    assert str(exc_info.value) == "Invalid schema. schema = <class 'str'>, data = <class 'float'>"
+
+
+def test_item_not_present_in_json():
+    @dataclass
+    class Item:
+        val: str
+        other_val: str = json_field(json="otherVal")
+
+    json = {"val": "test"}
+
+    with pytest.raises(UnmarshalError) as exc_info:
+        unmarshal(json, Item)
+    assert (
+        str(exc_info.value) == "Expected json key is not present in object. otherVal not in {'val': 'test'}"
+    )
+
+
+def test_unmarshal_decorator():
+    @dataclass
+    class Nest:
+        account: str
+        alert: str
+        severity: int = json_field(json="errorSeverity")
+
+    @dataclass
+    class Response:
+        val: str
+        iter: List[str]
+        nest: Nest
+        nest_list: List[Nest] = json_field(json="nestList")
+
+    @unmarshal_response(Response)
+    def my_func():
+        return {
+            "val": "test",
+            "iter": ["elem1", "elem2"],
+            "nest": {"account": "production", "alert": "something bad", "errorSeverity": 10},
+            "nestList": [
+                {"account": "production", "alert": "something bad", "errorSeverity": 10},
+                {"account": "uat", "alert": "its only uat", "errorSeverity": 3},
+            ],
+        }
+
+    want = Response(
+        val="test",
+        iter=["elem1", "elem2"],
+        nest=Nest(account="production", alert="something bad", severity=10),
+        nest_list=[
+            Nest(account="production", alert="something bad", severity=10),
+            Nest(account="uat", alert="its only uat", severity=3),
+        ],
+    )
+    got = my_func()
+    assert got == want

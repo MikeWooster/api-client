@@ -99,7 +99,7 @@ class RequestStrategy(BaseRequestStrategy):
                 **kwargs,
             )
         except Exception as error:
-            LOG.error(f"An error occurred when contacting %s", endpoint, exc_info=error)
+            LOG.error("An error occurred when contacting %s", endpoint, exc_info=error)
             raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)

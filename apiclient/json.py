@@ -20,13 +20,13 @@ def json_field(*args, json: str = None, metadata: dict = None, **kwargs):
     return dataclasses.field(*args, metadata=metadata, **kwargs)
 
 
-def marshall_response(schema: Generic[T]):
-    """Decorator to marshall the response into the provided dataclass."""
+def unmarshal_response(schema: Generic[T]):
+    """Decorator to unmarshal the response into the provided dataclass."""
 
-    def decorator(func):
-        def wrap(*args, **kwargs):
+    def decorator(func) -> T:
+        def wrap(*args, **kwargs) -> T:
             response = func(*args, **kwargs)
-            return response
+            return unmarshal(response, schema)
 
         return wrap
 
@@ -99,7 +99,6 @@ class _Unmarshaller:
             self.processors[t] = self.process_primitive
 
     def unmarshal(self):
-        item = None
         while self.result:
             item = self.get_item()
 
@@ -111,9 +110,6 @@ class _Unmarshaller:
             processor(item)
 
             self.promote()
-
-        if item is None:
-            raise UnmarshalError("Unable to identify item structure")
 
         return item.data
 
@@ -174,7 +170,7 @@ class _Unmarshaller:
     def clean_item(self, item: ResultContainer) -> ResultContainer:
         # Clean up the item (only called for dicts)
         for schema_key, field in item.schema_fields.items():
-            json_key = get_json_key_for_item(field, item)
+            json_key = self.get_json_key_for_item(field, item)
 
             if json_key == schema_key:
                 # No need to do anything, it's already named correctly
@@ -243,9 +239,6 @@ class _Unmarshaller:
                 prev.data[item.parent] = item.data
                 # prev has been updated so needs further processing
                 self.result.append(prev)
-            else:
-                self.result.append(prev)
-                self.dump.append(item)
 
         # Ensure that we haven't left anything in the dump
         self.flush_dump()
@@ -255,41 +248,18 @@ class _Unmarshaller:
         while self.dump:
             self.result.append(self.dump.pop())
 
+    @staticmethod
+    def get_json_key_for_item(field: dataclasses.Field, item: ResultContainer) -> str:
+        json_key = get_json_key(field)
 
-# def _unmarshall(response: Dict[str, JsonType], schema):
-#     output = {}
-#     for key, field in schema.__dataclass_fields__.items():
-#
-#         json_key = _determine_json_key(field)
-#         if json_key not in response:
-#             raise UnmarshalError(
-#                 "Expected key '{key}' is not present in response: {response}".format(
-#                     key=key, response=response
-#                 )
-#             )
-#
-#         value = response[json_key]
-#         if value in (dict, list):
-#             value = unmarshal()
-#         output[key] = response[json_key]
-#     breakpoint()
-#     return schema()
+        if json_key in item.data:
+            return json_key
 
-
-def get_json_key_for_item(field: dataclasses.Field, item: ResultContainer) -> str:
-    json_key = get_json_key(field)
-
-    if json_key in item.data:
-        return json_key
-
-    if field.name in item.data:
-        return field.name
-
-    raise UnmarshalError(
-        "Expected json key is not present in object. {key} not in {data}".format(
-            key=json_key, data=item.data
+        raise UnmarshalError(
+            "Expected json key is not present in object. {key} not in {data}".format(
+                key=json_key, data=item.data
+            )
         )
-    )
 
 
 def get_json_key(field: dataclasses.Field) -> str:
