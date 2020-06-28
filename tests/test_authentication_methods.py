@@ -69,6 +69,19 @@ def test_header_authentication_overwriting_parameter():
     assert client.get_default_username_password_authentication() is None
 
 
+def test_header_authentication_with_extra_parameters():
+    client = APIClient(
+        authentication_method=HeaderAuthentication(
+            token="secret", parameter="APIKEY", extra={"another key": "another value"}
+        ),
+        response_handler=BaseResponseHandler,
+        request_formatter=BaseRequestFormatter,
+    )
+    assert client.get_default_query_params() == {}
+    assert client.get_default_headers() == {"APIKEY": "Bearer secret", "another key": "another value"}
+    assert client.get_default_username_password_authentication() is None
+
+
 @pytest.mark.parametrize("scheme", [None, "", 0])
 def test_scheme_is_not_included_when_evaluates_to_false(scheme):
     client = APIClient(

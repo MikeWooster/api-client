@@ -6,7 +6,6 @@ from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormat
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
 from apiclient.utils.typing import OptionalDict
-from apiclient.utils.warnings import deprecation_warning
 
 LOG = logging.getLogger(__name__)
 
@@ -106,26 +105,6 @@ class APIClient:
         new_client.set_session(self.get_session())
         return new_client
 
-    def create(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Provide backwards compatibility adaptor from create() -> post()."""
-        deprecation_warning("'create()' will be deprecated in version 1.2. use 'post()' instead.")
-        return self.post(endpoint, data=data, params=params)
-
-    def read(self, endpoint: str, params: OptionalDict = None):
-        """Provide backwards compatibility adaptor from read() -> get()."""
-        deprecation_warning("`read()` will be deprecated in version 1.2. use `get()` instead.")
-        return self.get(endpoint, params=params)
-
-    def replace(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Provide backwards compatibility adaptor from replace() -> put()."""
-        deprecation_warning("`replace()` will be deprecated in version 1.2. use `put()` instead.")
-        return self.put(endpoint, data=data, params=params)
-
-    def update(self, endpoint: str, data: dict, params: OptionalDict = None):
-        """Provide backwards compatibility adaptor from update() -> patch()."""
-        deprecation_warning("`update()` will be deprecated in version 1.2. use `patch()` instead.")
-        return self.patch(endpoint, data=data, params=params)
-
     def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
         LOG.info("POST %s with %s", endpoint, data)
@@ -150,14 +129,3 @@ class APIClient:
         """Remove resource with DELETE endpoint."""
         LOG.info("DELETE %s", endpoint)
         return self.get_request_strategy().delete(endpoint, params=params, **kwargs)
-
-
-class BaseClient(APIClient):
-    """Provide backwards compatibility for BaseClient usage until it is removed."""
-
-    def __init__(self, *args, **kwargs):
-        deprecation_warning(
-            "`BaseClient` has been deprecated in version 1.1.4 and will be removed in version 1.2.0, "
-            "please use `APIClient` instead."
-        )
-        super().__init__(*args, **kwargs)

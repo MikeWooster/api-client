@@ -1,5 +1,5 @@
 import http.cookiejar
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Dict, Optional, Union
 
 from apiclient.utils.typing import BasicAuthType, OptionalStr
 
@@ -47,16 +47,26 @@ class HeaderAuthentication(BaseAuthenticationMethod):
     "Authorization: Bearer <token>"
     """
 
-    def __init__(self, token: str, parameter: str = "Authorization", scheme: OptionalStr = "Bearer"):
+    def __init__(
+        self,
+        token: str,
+        parameter: str = "Authorization",
+        scheme: OptionalStr = "Bearer",
+        extra: Optional[Dict[str, str]] = None,
+    ):
         self._token = token
         self._parameter = parameter
         self._scheme = scheme
+        self._extra = extra
 
-    def get_headers(self):
+    def get_headers(self) -> Dict[str, str]:
         if self._scheme:
-            return {self._parameter: f"{self._scheme} {self._token}"}
+            headers = {self._parameter: f"{self._scheme} {self._token}"}
         else:
-            return {self._parameter: self._token}
+            headers = {self._parameter: self._token}
+        if self._extra:
+            headers.update(self._extra)
+        return headers
 
 
 class BasicAuthentication(BaseAuthenticationMethod):
