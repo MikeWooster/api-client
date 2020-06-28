@@ -3,15 +3,9 @@ from unittest.mock import Mock, sentinel
 import pytest
 
 from apiclient import NoAuthentication
-from apiclient.client import APIClient, BaseClient
+from apiclient.client import APIClient
 from apiclient.request_strategies import BaseRequestStrategy
-from tests.helpers import (
-    MinimalClient,
-    MockRequestFormatter,
-    MockResponseHandler,
-    NoOpRequestStrategy,
-    client_factory,
-)
+from tests.helpers import MinimalClient, MockRequestFormatter, MockResponseHandler, client_factory
 
 
 def test_client_initialization_with_invalid_authentication_method():
@@ -124,29 +118,6 @@ def test_setting_incorrect_request_strategy_raises_runtime_error():
     with pytest.raises(RuntimeError) as exc_info:
         client.set_request_strategy("not a strategy")
     assert str(exc_info.value) == "provided request_strategy must be an instance of BaseRequestStrategy."
-
-
-@pytest.mark.parametrize(
-    "client_method,kwargs",
-    [
-        (client_factory(request_strategy=NoOpRequestStrategy()).create, {"data": sentinel.data}),
-        (client_factory(request_strategy=NoOpRequestStrategy()).read, {}),
-        (client_factory(request_strategy=NoOpRequestStrategy()).replace, {"data": sentinel.data}),
-        (client_factory(request_strategy=NoOpRequestStrategy()).update, {"data": sentinel.data}),
-    ],
-)
-def test_deprecation_warnings(client_method, kwargs):
-    with pytest.warns(DeprecationWarning, match="will be deprecated in version 1.2."):
-        client_method(sentinel.url, **kwargs)
-
-
-def test_client_initialization_deprecation_warning_when_using_baseclient():
-    expected = (
-        "`BaseClient` has been deprecated in version 1.1.4 and will be removed in version 1.2.0, "
-        "please use `APIClient` instead."
-    )
-    with pytest.warns(DeprecationWarning, match=expected):
-        BaseClient()
 
 
 def test_client_get_and_set_session():

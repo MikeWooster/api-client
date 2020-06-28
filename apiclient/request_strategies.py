@@ -99,7 +99,7 @@ class RequestStrategy(BaseRequestStrategy):
                 **kwargs,
             )
         except Exception as error:
-            LOG.error(f"An error occurred when contacting %s", endpoint, exc_info=error)
+            LOG.error("An error occurred when contacting %s", endpoint, exc_info=error)
             raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)
@@ -182,18 +182,23 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
         if params is None:
             params = {}
 
-        while True:
+        pages = []
+        run = True
+        while run:
             this_page_params = deepcopy(params)
 
             response = super().get(endpoint, params=this_page_params, **kwargs)
 
-            yield response
+            pages.append(response)
             next_page_params = self.get_next_page_params(response, previous_page_params=this_page_params)
+
             if next_page_params:
                 params.update(next_page_params)
             else:
                 # No further pages found
-                break
+                run = False
+
+        return pages
 
     def get_next_page_params(self, response, previous_page_params: dict) -> OptionalDict:
         return self._next_page(response, previous_page_params)
@@ -206,17 +211,16 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
         self._next_page = next_page
 
     def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
-        while True:
+        pages = []
+        while endpoint:
             response = super().get(endpoint, params=params, **kwargs)
 
-            yield response
+            pages.append(response)
 
             next_page_url = self.get_next_page_url(response, previous_page_url=endpoint)
-            if next_page_url:
-                endpoint = next_page_url
-            else:
-                # No further pages found
-                break
+            endpoint = next_page_url
+
+        return pages
 
     def get_next_page_url(self, response, previous_page_url: str) -> OptionalDict:
         return self._next_page(response, previous_page_url)
