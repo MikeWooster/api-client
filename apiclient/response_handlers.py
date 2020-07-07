@@ -33,7 +33,10 @@ class JsonResponseHandler(BaseResponseHandler):
     @staticmethod
     def get_request_data(response: Response) -> JsonType:
         try:
-            response_json = response.json()
+            if response == "":
+                response_json = ""
+            else:
+                response_json = response.json()
         except JSONDecodeError as error:
             LOG.error("Unable to decode response data to json. data=%s", response.text)
             raise ResponseParseError(
