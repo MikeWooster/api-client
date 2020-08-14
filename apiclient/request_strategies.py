@@ -149,7 +149,7 @@ class RequestStrategy(BaseRequestStrategy):
             response.text,
         )
         raise exception_class(
-            message=f"{response.status_code} Error: {response.reason} for url: {response.url}",
+            message=f"{response.status_code} Error: {response.reason} Details: {response.text}",            
             status_code=response.status_code,
         )
 
