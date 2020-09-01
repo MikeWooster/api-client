@@ -1,7 +1,8 @@
 import logging
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Type
+from typing import TYPE_CHECKING, Any, Callable, Type
 
+import aiohttp
 import requests
 from requests import Response
 
@@ -17,43 +18,117 @@ if TYPE_CHECKING:  # pragma: no cover
     from apiclient import APIClient
 
 
+def get_exception_class_for_status_code(status_code: int) -> Type[exceptions.APIRequestError]:
+    """Translates a status code into an APIClient exception."""
+    if 300 <= status_code < 400:
+        exception_class = exceptions.RedirectionError
+    elif 400 <= status_code < 500:
+        exception_class = exceptions.ClientError
+    elif 500 <= status_code < 600:
+        exception_class = exceptions.ServerError
+    else:
+        exception_class = exceptions.UnexpectedError
+    return exception_class
+
+
+def get_logger_from_exception_type(exception_class) -> LOG:
+    """Determines whether to log an error or warning.
+
+    TODO: deprecate this - libraries should not log above info level.
+    """
+    if issubclass(exception_class, exceptions.ServerError):
+        return LOG.warning
+    return LOG.error
+
+
 class BaseRequestStrategy:
+    def __init__(self):
+        self._client = None
+
     def set_client(self, client: "APIClient"):
         self._client = client
+        # Set a global `requests.session` on the parent client instance.
+        if self.get_session() is None:
+            self.set_session(self.create_session())
+
+    def create_session(self):
+        """Abstract method that will create a session object."""
+        raise NotImplementedError
 
     def get_client(self) -> "APIClient":
         return self._client
 
-    def post(self, *args, **kwargs):  # pragma: no cover
+    def get_session(self):
+        return self.get_client().get_session()
+
+    def set_session(self, session: Any):
+        self.get_client().set_session(session)
+
+    def _get_request_params(self, params: OptionalDict) -> dict:
+        """Return dictionary with any additional authentication query parameters."""
+        if params is None:
+            params = {}
+        params.update(self.get_client().get_default_query_params())
+        return params
+
+    def _get_request_headers(self, headers: OptionalDict) -> dict:
+        """Return dictionary with any additinoal authentication headers."""
+        if headers is None:
+            headers = {}
+        headers.update(self.get_client().get_default_headers())
+        return headers
+
+    def _get_username_password_authentication(self):
+        return self.get_client().get_default_username_password_authentication()
+
+    def _get_formatted_data(self, data: OptionalDict):
+        return self.get_client().get_request_formatter().format(data)
+
+    def _get_request_timeout(self) -> float:
+        """Return the number of seconds before the request times out."""
+        return self.get_client().get_request_timeout()
+
+    def _check_response(self, status_code: int, reason: str, url: str, text: str) -> None:
+        """Raise a custom exception if the response is not OK."""
+        if status_code < 200 or status_code >= 300:
+            self._handle_bad_response(status_code, reason, url, text)
+
+    def _decode_response_data(self, content: str):
+        return self.get_client().get_response_handler().get_request_data(content)
+
+    @staticmethod
+    def _handle_bad_response(status_code: int, reason: str, url: str, text: str) -> None:
+        """Convert the error into an understandable client exception."""
+        exception_class = get_exception_class_for_status_code(status_code)
+        logger = get_logger_from_exception_type(exception_class)
+        logger(
+            "%s Error: %s for url: %s. data=%s", status_code, reason, url, text,
+        )
+        raise exception_class(
+            message=f"{status_code} Error: {reason} for url: {url}", status_code=status_code,
+        )
+
+    def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         raise NotImplementedError
 
-    def get(self, *args, **kwargs):  # pragma: no cover
+    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
         raise NotImplementedError
 
-    def put(self, *args, **kwargs):  # pragma: no cover
+    def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         raise NotImplementedError
 
-    def patch(self, *args, **kwargs):  # pragma: no cover
+    def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         raise NotImplementedError
 
-    def delete(self, *args, **kwargs):  # pragma: no cover
+    def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
         raise NotImplementedError
 
 
 class RequestStrategy(BaseRequestStrategy):
     """Requests strategy that uses the `requests` lib with a `requests.session`."""
 
-    def set_client(self, client: "APIClient"):
-        super().set_client(client)
-        # Set a global `requests.session` on the parent client instance.
-        if self.get_session() is None:
-            self.set_session(requests.session())
-
-    def get_session(self):
-        return self.get_client().get_session()
-
-    def set_session(self, session: requests.Session):
-        self.get_client().set_session(session)
+    def create_session(self) -> requests.Session:
+        return requests.session()
 
     def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
@@ -89,7 +164,7 @@ class RequestStrategy(BaseRequestStrategy):
         Delegates response parsing to the response handler.
         """
         try:
-            response = request_method(
+            response: Response = request_method(
                 endpoint,
                 params=self._get_request_params(params),
                 headers=self._get_request_headers(headers),
@@ -102,74 +177,57 @@ class RequestStrategy(BaseRequestStrategy):
             LOG.error("An error occurred when contacting %s", endpoint, exc_info=error)
             raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
-            self._check_response(response)
-        return self._decode_response_data(response)
+            self._check_response(response.status_code, response.reason, response.url, response.text)
+        return self._decode_response_data(response.text)
 
-    def _get_request_params(self, params: OptionalDict) -> dict:
-        """Return dictionary with any additional authentication query parameters."""
-        if params is None:
-            params = {}
-        params.update(self.get_client().get_default_query_params())
-        return params
 
-    def _get_request_headers(self, headers: OptionalDict) -> dict:
-        """Return dictionary with any additinoal authentication headers."""
-        if headers is None:
-            headers = {}
-        headers.update(self.get_client().get_default_headers())
-        return headers
+class AsyncRequestStrategy(BaseRequestStrategy):
+    # TODO: Figure out how to use session as context manager.?
 
-    def _get_username_password_authentication(self):
-        return self.get_client().get_default_username_password_authentication()
+    def create_session(self) -> aiohttp.ClientSession:
+        return aiohttp.ClientSession()
 
-    def _get_formatted_data(self, data: OptionalDict):
-        return self.get_client().get_request_formatter().format(data)
+    async def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+        return
 
-    def _get_request_timeout(self) -> float:
-        """Return the number of seconds before the request times out."""
-        return self.get_client().get_request_timeout()
+    async def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
+        return await self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
 
-    def _check_response(self, response: Response):
-        """Raise a custom exception if the response is not OK."""
-        if response.status_code < 200 or response.status_code >= 300:
-            self._handle_bad_response(response)
+    async def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+        return
 
-    def _decode_response_data(self, response: Response):
-        return self.get_client().get_response_handler().get_request_data(response)
+    async def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+        return
 
-    def _handle_bad_response(self, response: Response):
-        """Convert the error into an understandable client exception."""
-        exception_class = self._get_exception_class(response.status_code)
-        logger = self._get_logger_from_exception_type(exception_class)
-        logger(
-            "%s Error: %s for url: %s. data=%s",
-            response.status_code,
-            response.reason,
-            response.url,
-            response.text,
-        )
-        raise exception_class(
-            message=f"{response.status_code} Error: {response.reason} for url: {response.url}",
-            status_code=response.status_code,
-        )
+    async def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
+        return
 
-    @staticmethod
-    def _get_exception_class(status_code: int) -> Type[exceptions.APIRequestError]:
-        if 300 <= status_code < 400:
-            exception_class = exceptions.RedirectionError
-        elif 400 <= status_code < 500:
-            exception_class = exceptions.ClientError
-        elif 500 <= status_code < 600:
-            exception_class = exceptions.ServerError
-        else:
-            exception_class = exceptions.UnexpectedError
-        return exception_class
-
-    @staticmethod
-    def _get_logger_from_exception_type(exception_class) -> LOG:
-        if issubclass(exception_class, exceptions.ServerError):
-            return LOG.warning
-        return LOG.error
+    async def _make_request(
+        self,
+        request_method: Callable,
+        endpoint: str,
+        params: OptionalDict = None,
+        headers: OptionalDict = None,
+        data: OptionalDict = None,
+        **kwargs,
+    ) -> Response:
+        try:
+            async with request_method(
+                endpoint,
+                params=self._get_request_params(params),
+                headers=self._get_request_headers(headers),
+                auth=self._get_username_password_authentication(),
+                data=self._get_formatted_data(data),
+                timeout=self._get_request_timeout(),
+                **kwargs,
+            ) as response:
+                self._check_response(
+                    response.status, response.reason, response.url.path, await response.text()
+                )
+                return self._decode_response_data(await response.text())
+        except Exception as error:
+            LOG.error("An error occurred when contacting %s", endpoint, exc_info=error)
+            raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
 
 
 class QueryParamPaginatedRequestStrategy(RequestStrategy):

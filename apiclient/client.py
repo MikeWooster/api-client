@@ -3,7 +3,7 @@ from typing import Any, Optional, Type
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
-from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
+from apiclient.request_strategies import AsyncRequestStrategy, BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
 from apiclient.utils.typing import OptionalDict
 
@@ -13,7 +13,7 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10.0
 
 
-class APIClient:
+class AbstractClient:
     def __init__(
         self,
         authentication_method: BaseAuthenticationMethod = NoAuthentication(),
@@ -32,10 +32,13 @@ class APIClient:
         self.set_authentication_method(authentication_method)
         self.set_response_handler(response_handler)
         self.set_request_formatter(request_formatter)
-        self.set_request_strategy(RequestStrategy())
+        self.set_request_strategy(self.get_default_request_strategy())
 
         # Perform any one time authentication required by api
         self._authentication_method.perform_initial_auth(self)
+
+    def get_default_request_strategy(self):
+        raise NotImplementedError
 
     def get_session(self) -> Any:
         return self._session
@@ -129,3 +132,20 @@ class APIClient:
         """Remove resource with DELETE endpoint."""
         LOG.info("DELETE %s", endpoint)
         return self.get_request_strategy().delete(endpoint, params=params, **kwargs)
+
+
+class APIClient(AbstractClient):
+    def get_default_request_strategy(self):
+        return RequestStrategy()
+
+
+class AsyncClient(AbstractClient):
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *err):
+        await self.get_session().close()
+        self.set_session(None)
+
+    def get_default_request_strategy(self):
+        return AsyncRequestStrategy()

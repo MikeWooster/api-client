@@ -1,8 +1,12 @@
-from unittest.mock import call, sentinel
+from unittest.mock import Mock, call, sentinel
 
+import aiohttp
 import pytest
 
+from apiclient import APIClient
+from apiclient.client import AsyncClient
 from apiclient.request_strategies import (
+    AsyncRequestStrategy,
     BaseRequestStrategy,
     QueryParamPaginatedRequestStrategy,
     RequestStrategy,
@@ -193,3 +197,26 @@ def test_url_paginated_strategy_delegates_to_callable(mock_requests):
     history = mock_requests.request_history
     assert history[0].url == "mock://testserver.com"
     assert history[1].url == "mock://testserver.com/2"
+
+
+class MyClient(APIClient):
+    async def get_stuff(self):
+        resp = self.get("https://example.com")
+        return await resp
+
+
+@pytest.mark.asyncio
+async def test_async_get():
+    # async def fetch(session, url):
+    #     async with session.get(url) as response:
+    #         return await response.text()
+    #
+    # async def main():
+    #     session = aiohttp.ClientSession()
+    #
+    #     html = await fetch(session, "http://python.org")
+    #     print(html)
+    #
+    # assert await main() == "foo"
+    async with AsyncClient() as client:
+        assert await client.get("http://example.com") == "foo"
