@@ -8,6 +8,7 @@ from requests import Response
 
 from apiclient.exceptions import ResponseParseError
 from apiclient.utils.typing import JsonType, XmlType
+from apiclient.utils.warnings import deprecation_warning
 
 LOG = logging.getLogger(__name__)
 
@@ -69,6 +70,8 @@ class YamlResponseHandler(BaseResponseHandler):
 
     @staticmethod
     def get_request_data(response: Response) -> JsonType:
+        deprecation_warning("YamlResponseHandler will be removed in version 1.3.0")
+
         try:
             response_yaml = yaml.load(response.text)
         except yaml.YAMLError as error:
