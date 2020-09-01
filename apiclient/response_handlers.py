@@ -1,5 +1,6 @@
 import logging
 from json import JSONDecodeError
+from typing import Optional
 from xml.etree import ElementTree
 
 import yaml
@@ -31,7 +32,10 @@ class JsonResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response data as json."""
 
     @staticmethod
-    def get_request_data(response: Response) -> JsonType:
+    def get_request_data(response: Response) -> Optional[JsonType]:
+        if response.text == "":
+            return None
+
         try:
             response_json = response.json()
         except JSONDecodeError as error:
@@ -46,7 +50,10 @@ class XmlResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response to an xml Element."""
 
     @staticmethod
-    def get_request_data(response: Response) -> XmlType:
+    def get_request_data(response: Response) -> Optional[XmlType]:
+        if response.text == "":
+            return None
+
         try:
             xml_element = ElementTree.fromstring(response.text)
         except ElementTree.ParseError as error:

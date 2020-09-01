@@ -10,6 +10,12 @@ from apiclient.response_handlers import BaseResponseHandler
 from tests.helpers import build_response
 
 
+@pytest.fixture
+def blank_response():
+    """Fixture that constructs a response with a blank body."""
+    return build_response(data="")
+
+
 class TestBaseResponseHandler:
     handler = BaseResponseHandler
 
@@ -40,6 +46,10 @@ class TestJsonResponseHandler:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to decode response data to json. data='foo'"
 
+    def test_blank_response_body_returns_none(self, blank_response):
+        data = self.handler.get_request_data(blank_response)
+        assert data is None
+
 
 class TestXmlResponseHandler:
     handler = XmlResponseHandler
@@ -57,6 +67,10 @@ class TestXmlResponseHandler:
         with pytest.raises(ResponseParseError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to xml. data='foo'"
+
+    def test_blank_response_body_returns_none(self, blank_response):
+        data = self.handler.get_request_data(blank_response)
+        assert data is None
 
 
 class TestYamlResponseHandler:
@@ -78,3 +92,7 @@ class TestYamlResponseHandler:
         with pytest.raises(ResponseParseError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to yaml. data='foo:    bar:   2'"
+
+    def test_blank_response_body_returns_none(self, blank_response):
+        data = self.handler.get_request_data(blank_response)
+        assert data is None
