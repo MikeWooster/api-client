@@ -53,8 +53,7 @@ def testing_retries(max_attempts=None, wait=None):
 
 @contextmanager
 def testing_retry_for_status_code(status_codes=None):
-    """Context manager to create a retry decorated function to test status codes.
-    """
+    """Context manager to create a retry decorated function to test status codes."""
 
     @tenacity.retry(
         retry=retry_if_api_request_error(status_codes=status_codes),

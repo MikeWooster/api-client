@@ -62,10 +62,10 @@ class NoOpRequestStrategy(BaseRequestStrategy):
         pass
 
 
-def build_response(data=None, json=None) -> Response:
+def build_response(data=None, json=None, status_code: int = 200) -> Response:
     """Return a requests.Response object with the data set as the content."""
     response = Response()
-    response.status_code = 200
+    response.status_code = status_code
     response.headers = {
         "Connection": "keep-alive",
         "Content-Encoding": "gzip",
