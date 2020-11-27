@@ -504,8 +504,16 @@ More usage examples can be found there.
 
 ## Extended Example
 ```
-from apiclient import APIClient, endpoint, paginated, retry_request
-
+from apiclient import (
+    APIClient,
+    endpoint,
+    paginated,
+    retry_request, 
+    HeaderAuthentication,
+    JsonResponseHandler,
+    JsonRequestFormatter,
+)
+from apiclient.exceptions import APIClientError
 
 # Define endpoints, using the provided decorator.
 @endpoint(base_url="https://jsonplaceholder.typicode.com")
