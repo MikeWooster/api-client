@@ -1,4 +1,3 @@
-import logging
 from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Type
 
@@ -7,9 +6,6 @@ from requests import Response
 
 from apiclient import exceptions
 from apiclient.utils.typing import OptionalDict
-
-LOG = logging.getLogger(__name__)
-
 
 if TYPE_CHECKING:  # pragma: no cover
     # Stupid way of getting around cyclic imports when
@@ -99,7 +95,6 @@ class RequestStrategy(BaseRequestStrategy):
                 **kwargs,
             )
         except Exception as error:
-            LOG.error("An error occurred when contacting %s", endpoint, exc_info=error)
             raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)
@@ -140,17 +135,10 @@ class RequestStrategy(BaseRequestStrategy):
     def _handle_bad_response(self, response: Response):
         """Convert the error into an understandable client exception."""
         exception_class = self._get_exception_class(response.status_code)
-        logger = self._get_logger_from_exception_type(exception_class)
-        logger(
-            "%s Error: %s for url: %s. data=%s",
-            response.status_code,
-            response.reason,
-            response.url,
-            response.text,
-        )
         raise exception_class(
             message=f"{response.status_code} Error: {response.reason} for url: {response.url}",
             status_code=response.status_code,
+            info=response.text,
         )
 
     @staticmethod
@@ -164,12 +152,6 @@ class RequestStrategy(BaseRequestStrategy):
         else:
             exception_class = exceptions.UnexpectedError
         return exception_class
-
-    @staticmethod
-    def _get_logger_from_exception_type(exception_class) -> LOG:
-        if issubclass(exception_class, exceptions.ServerError):
-            return LOG.warning
-        return LOG.error
 
 
 class QueryParamPaginatedRequestStrategy(RequestStrategy):

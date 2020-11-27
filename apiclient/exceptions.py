@@ -18,9 +18,10 @@ class ResponseParseError(APIClientError):
 class APIRequestError(APIClientError):
     """Exception to denote that something went wrong when making the request."""
 
-    def __init__(self, message, status_code: OptionalInt = None):
+    def __init__(self, message, status_code: OptionalInt = None, info: str = ""):
         self.message = message
         self.status_code = status_code
+        self.info = info
 
     def __str__(self):
         return self.message
