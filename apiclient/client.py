@@ -107,25 +107,25 @@ class APIClient:
 
     def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
-        LOG.info("POST %s with %s", endpoint, data)
+        LOG.debug("POST %s with %s", endpoint, data)
         return self.get_request_strategy().post(endpoint, data=data, params=params, **kwargs)
 
     def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
         """Return response data from GET endpoint."""
-        LOG.info("GET %s", endpoint)
+        LOG.debug("GET %s", endpoint)
         return self.get_request_strategy().get(endpoint, params=params, **kwargs)
 
     def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
-        LOG.info("PUT %s with %s", endpoint, data)
+        LOG.debug("PUT %s with %s", endpoint, data)
         return self.get_request_strategy().put(endpoint, data=data, params=params, **kwargs)
 
     def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
-        LOG.info("PATCH %s with %s", endpoint, data)
+        LOG.debug("PATCH %s with %s", endpoint, data)
         return self.get_request_strategy().patch(endpoint, data=data, params=params, **kwargs)
 
     def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
         """Remove resource with DELETE endpoint."""
-        LOG.info("DELETE %s", endpoint)
+        LOG.debug("DELETE %s", endpoint)
         return self.get_request_strategy().delete(endpoint, params=params, **kwargs)
