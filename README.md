@@ -620,3 +620,10 @@ The `APIClient` provides the following public interface:
    is to avoid the request waiting forever for a response, and is recommended
    to always be set to a value in production applications.  It is however possible to
    override this method to return the timeout required by your application.
+
+## Mentions
+
+Many thanks to [JetBrains](https://www.jetbrains.com/?from=api-client) for supplying me with a license to use their product in the development
+of this tool.
+
+![JetBrains](readme-data/jetbrains.svg)
