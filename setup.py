@@ -10,7 +10,7 @@ pydantic_dependencies = ["pydantic"]
 test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock"] + jsonmarshal_dependencies + pydantic_dependencies
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
-dev_dependencies = jsonmarshal_dependencies + pydantic_dependencies + test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
+dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
 deploy_dependencies = ["requests", "twine"]
 
 
