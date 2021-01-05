@@ -62,7 +62,8 @@ with suppress(ImportError):
                         if issubclass(arg_type, BaseModel):
                             data[arg_name] = parse_obj_as(arg_type, kwargs).dict(**extra_kw)
                         else:
-                            if (val := kwargs.get(arg_name)) is not None:
+                            val = kwargs.get(arg_name)
+                            if val is not None:
                                 origin_kwargs[arg_name] = val
                     return func(endpoint, **{**origin_kwargs, **data})
                 return func(endpoint, *args, **kwargs)
