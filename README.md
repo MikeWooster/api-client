@@ -1,12 +1,12 @@
 # Python API Client
 
 A client for communicating with an api should be a clean abstraction
-over the third part api you are communicating with. It should be easy to 
+over the third part api you are communicating with. It should be easy to
 understand and have the sole responsibility of calling the endpoints and
 returning data.
 
-To achieve this, `APIClient` takes care of the other (often duplicated) 
-responsibilities, such as authentication and response handling, moving 
+To achieve this, `APIClient` takes care of the other (often duplicated)
+responsibilities, such as authentication and response handling, moving
 that code away from the clean abstraction you have designed.
 
 ## Quick links
@@ -20,17 +20,18 @@ that code away from the clean abstraction you have designed.
 8. [Handling bad requests and responses](#Exceptions)
 9. [Endpoints as code](#Endpoints)
 10. [Marshalling requests/responses](#Marshalling)
+11. [Pydantic requests/responses](#Pydantic)
 
 ## Installation
 
-```
+```bash
 pip install api-client
 ```
 
 ## Usage
 
 ### Simple Example
-```
+```python
 from apiclient import APIClient
 
 class MyClient(APIClient):
@@ -53,7 +54,7 @@ class MyClient(APIClient):
 ```
 The `APIClient` exposes a number of predefined methods that you can call
 This example uses `get` to perform a GET request on an endpoint.
-Other methods include: `post`, `put`, `patch` and `delete`. More 
+Other methods include: `post`, `put`, `patch` and `delete`. More
 information on these methods is documented in the [Interface](#APIClient-Interface).
 
 
@@ -74,7 +75,7 @@ their own custom decorator.
 
 Usage:
 
-```
+```python
 from apiclient import retry_request
 
 class MyClient(APIClient):
@@ -91,7 +92,7 @@ tenacity along with the custom retry strategy.
 For example, you can build a retry decorator that retries `APIRequestError`
 which waits for 2 seconds between retries and gives up after 5 attempts.
 
-```
+```python
 import tenacity
 from apiclient.retrying import retry_if_api_request_error
 
@@ -103,10 +104,10 @@ retry_decorator = tenacity.retry(
 )
 ```
 
-Or you can build a decorator that will retry only on specific status 
+Or you can build a decorator that will retry only on specific status
 codes (following a failure).
 
-```
+```python
 retry_decorator = tenacity.retry(
     retry=retry_if_api_request_error(status_codes=[500, 501, 503]),
     wait=tenacity.wait_fixed(2),
@@ -125,20 +126,20 @@ the pages are specified in the query parameters, or by modifying the url.
 Usage is simple in both cases; paginator decorators take a Callable with two required arguments:
 - `by_query_params` -> callable takes `response` and `previous_page_params`.
 - `by_url` -> callable takes `respones` and `previous_page_url`.
-The callable will need to return either the params in the case of `by_query_params`, or a new url in the 
+The callable will need to return either the params in the case of `by_query_params`, or a new url in the
 case of `by_url`.
 If the response is the last page, the function should return None.
 
 Usage:
 
-```
+```python
 from apiclient import paginated
 
 
 def next_page_by_params(response, previous_page_params):
     # Function reads the response data and returns the query param
     # that tells the next request to go to.
-    return {"next": response["pages"]["next"]
+    return {"next": response["pages"]["next"]}
 
 
 def next_page_by_url(response, previous_page_url):
@@ -168,7 +169,7 @@ underlying implementation.
 
 The apiclient supports the following authentication methods, by specifying
 the initialized class on initialization of the client, as follows:
-```
+```python
 client = ClientImplementation(
    authentication_method=<AuthenticationMethodClass>(),
    response_handler=...,
@@ -181,7 +182,7 @@ This authentication method simply does not add anything to the client,
 allowing the api to contact APIs that do not enforce any authentication.
 
 Example:
-```
+```python
 client = ClientImplementation(
    authentication_method=NoAuthentication(),
    response_handler=...,
@@ -193,7 +194,7 @@ client = ClientImplementation(
 This authentication method adds the relevant parameter and token to the
 client query parameters.  Usage is as follows:
 
-```
+```python
 client = ClientImplementation(
     authentication_method=QueryParameterAuthentication(parameter="apikey", token="secret_token"),
     response_handler=...,
@@ -212,7 +213,7 @@ http://api.example.com/users?age=27&apikey=secret_token
 ### `HeaderAuthentication`
 This authentication method adds the relevant authorization header to
 the outgoing request.  Usage is as follows:
-```
+```python
 client = ClientImplementation(
     authentication_method=HeaderAuthentication(token="secret_value"),
     response_handler=...,
@@ -224,7 +225,7 @@ client = ClientImplementation(
 ```
 The `Authorization` parameter and `Bearer` scheme can be adjusted by
 specifying on method initialization.
-```
+```python
 authentication_method=HeaderAuthentication(
    token="secret_value"
    parameter="apikey",
@@ -238,7 +239,7 @@ authentication_method=HeaderAuthentication(
 Or alternatively, when APIs do not require a scheme to be set, you can
 specify it as a value that evaluates to False to remove the scheme from
 the header:
-```
+```python
 authentication_method=HeaderAuthentication(
    token="secret_value"
    parameter="token",
@@ -251,7 +252,7 @@ authentication_method=HeaderAuthentication(
 
 Additional header values can be passed in as a dict here when API's require more than one
 header to authenticate:
-```
+```python
 authentication_method=HeaderAuthentication(
    token="secret_value"
    parameter="token",
@@ -266,7 +267,7 @@ authentication_method=HeaderAuthentication(
 ### `BasicAuthentication`
 This authentication method enables specifying a username and password to APIs
 that require such.
-```
+```python
 client = ClientImplementation(
     authentication_method=BasicAuthentication(username="foo", password="secret_value"),
     response_handler=...,
@@ -277,7 +278,7 @@ client = ClientImplementation(
 ### `CookieAuthentication`
 This authentication method allows a user to specify a url which is used
 to authenticate an initial request, made at APIClient initialization,
-with the authorization tokens then persisted for the duration of the 
+with the authorization tokens then persisted for the duration of the
 client instance in cookie storage.
 
 These cookies use the `http.cookiejar.CookieJar()` and are set on the
@@ -285,10 +286,10 @@ session so that all future requests contain these cookies.
 
 As the method of authentication at the endpoint is not standardised
 across API's, the authentication method can be customized using one of
-the already defined authentication methods; `QueryParameterAuthentication`, 
+the already defined authentication methods; `QueryParameterAuthentication`,
 `HeaderAuthentication`, `BasicAuthentication`.
 
-```
+```python
 client = ClientImplementation(
     authentication_method=(
         CookieAuthentication(
@@ -313,7 +314,7 @@ the class on initialization of the client as follows:
 The response handler can be omitted, in which case no formatting is applied to the
 outgoing data.
 
-```
+```python
 client = ClientImplementation(
    authentication_method=...,
    response_handler=<ResponseHandlerClass>,
@@ -326,7 +327,7 @@ Handler that simply returns the original `Response` object with no
 alteration.
 
 Example:
-```
+```python
 client = ClientImplementation(
     authentication_method=...,
     response_handler=RequestsResponseHandler,
@@ -340,7 +341,7 @@ If an error occurs trying to parse to json then a `UnexpectedError`
 will be raised.
 
 Example:
-```
+```python
 client = ClientImplementation(
     authentication_method=...,
     response_handler=JsonResponseHandler,
@@ -354,7 +355,7 @@ If an error occurs trying to parse to xml then a `UnexpectedError`
 will be raised.
 
 Example:
-```
+```python
 client = ClientImplementation(
     authentication_method=...,
     response_handler=XmlResponseHandler,
@@ -368,7 +369,7 @@ dictionary.  If an error occurs trying to parse the yaml then an `UnexpectedErro
 will be raised.
 
 Example:
-```
+```python
 client = ClientImplementation(
     authentication_method=...,
     response_handler=YamlResponseHandler,
@@ -388,7 +389,7 @@ before making the request.
 The apiclient supports the following request formatters, by specifying
 the class on initialization of the client as follows:
 
-```
+```python
 client = ClientImplementation(
    authentication_method=...,
    response_handler=...,
@@ -403,7 +404,7 @@ Formatter that converts the data into a json format and adds the
 
 
 Example:
-```
+```python
 client = ClientImplementation(
     authentication_method=...,
     response_handler=...,
@@ -458,7 +459,7 @@ resources.  The decorator will combine the base_url with the resource.
 
 Example:
 
-```
+```python
 from apiclient import endpoint
 
 @endpoint(base_url="http://foo.com")
@@ -466,7 +467,7 @@ class Endpoint:
     resource = "search"
 
 >>> Endpoint.resource
-"http://foo.com/search
+"http://foo.com/search"
 ```
 
 ## Marshalling
@@ -474,7 +475,7 @@ class Endpoint:
 The following decorators have been provided to marshal request data as python dataclasses to json
 and to unmarshal json directly into a python dataclass.
 
-```
+```python
 # Marshal dataclass -> json
 @marshal_request(date_fmt: Optional[str] = None, datetime_fmt: Optional[str] = None)
 
@@ -486,14 +487,14 @@ Usage:
 1. Define the schema for your api in python dataclasses.
 2. Add the `@unmarshal_response` decorator to the api client method to transform the response
 directly into your defined schema.
-   ```
+   ```python
    @unmarshal_response(List[Account])
    def get_accounts():
        ...
    ```
 3. Add the `@marshal_request` decorator to the api client method to translate the incoming dataclass
 into the required json for the endpoint:
-   ```
+   ```python
    @marshal_request()
    def create_account(account: Account):
       ...
@@ -502,13 +503,78 @@ into the required json for the endpoint:
 The marshalling functionality has been provided by: https://github.com/MikeWooster/jsonmarshal
 More usage examples can be found there.
 
-## Extended Example
+## Pydantic
+
+The following decorators have been provided to validate request data and converting json straight to pydantic class.
+
+```python
+from apiclient import serialize, serialize_all_methods, serialize_request, serialize_response
+
+# serialize incoming kwargs
+@serialize_request(schema: Optional[Type[BaseModel]] = None, extra_kwargs: dict = None)
+
+# serialize response in pydantic class
+@serialize_response(schema: Optional[Type[BaseModel]] = None)
+
+# serialize request and response data
+@serialize(schema_request: Optional[Type[BaseModel]] = None, schema_response: Optional[Type[BaseModel]] = None, **base_kwargs)
+
+# wraps all local methods of a class with a specified decorator. default 'serialize'
+@serialize_all_methods(decorator=serialize)
 ```
+
+Usage:
+1. Define the schema for your api in pydantic classes.
+2. Add the `@serialize_response` decorator to the api client method to transform the response
+directly into your defined schema.
+   ```python
+   @serialize_response(List[Account])
+   def get_accounts():
+       ...
+   # or
+   @serialize_response()
+   def get_accounts() -> List[Account]:
+       ...
+   ```
+3. Add the `@serialize_request` decorator to the api client method to translate the incoming kwargs
+into the required dict for the endpoint:
+   ```python
+   @serialize_request(AccountHolder)
+   def create_account(data: dict):
+      ...
+   # or
+   @serialize_request()
+   def create_account(data: AccountHolder):
+    # data will be exactly a dict
+      ...
+   create_account(last_name='Smith', first_name='John')
+   # data will be a dict {"last_name": "Smith", "first_name": "John"}
+   ```
+4. `@serialize` - It is a combination of the two decorators `@serialize_response` and`@serialize_request`.
+5. For more convenient use, you can wrap all APIClient methods with `@serialize_all_methods`.
+   ```python
+   from apiclient import APIClient, serialize_all_methods
+   from typing import List
+
+    from .models import PDAccount, PDAccountHolder
+
+
+    @serialize_all_methods()
+    class MyApiClient(APIClient):
+        def decorated_func(data: PDAccount) -> PDAccount:
+            ...
+
+        def decorated_func_holder(data: PDAccountHolder) -> List[PDAccount]:
+           ...
+  ```
+
+## Extended Example
+```python
 from apiclient import (
     APIClient,
     endpoint,
     paginated,
-    retry_request, 
+    retry_request,
     HeaderAuthentication,
     JsonResponseHandler,
     JsonRequestFormatter,
