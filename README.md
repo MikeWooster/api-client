@@ -566,7 +566,7 @@ into the required dict for the endpoint:
 
         def decorated_func_holder(data: PDAccountHolder) -> List[PDAccount]:
            ...
-  ```
+    ```
 
 ## Extended Example
 
