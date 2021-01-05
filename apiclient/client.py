@@ -96,7 +96,7 @@ class APIClient:
 
     def clone(self):
         """Enable Prototype pattern on client."""
-        new_client = APIClient(
+        new_client = type(self)(
             authentication_method=self.get_authentication_method(),
             response_handler=self.get_response_handler(),
             request_formatter=self.get_request_formatter(),
