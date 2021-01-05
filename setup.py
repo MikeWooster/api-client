@@ -3,12 +3,14 @@
 import setuptools
 
 # Pinning tenacity as the api has changed slightly which breaks all tests.
-application_dependencies = ["requests>=2.16", "pyyaml", "tenacity>=5.1.0", "jsonmarshal"]
+application_dependencies = ["requests>=2.16", "pyyaml", "tenacity>=5.1.0"]
 prod_dependencies = []
-test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock"]
+jsonmarshal_dependencies = ["jsonmarshal"]
+pydantic_dependencies = ["pydantic"]
+test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock"] + jsonmarshal_dependencies + pydantic_dependencies
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
-dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
+dev_dependencies = jsonmarshal_dependencies + pydantic_dependencies + test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
 deploy_dependencies = ["requests", "twine"]
 
 
@@ -41,6 +43,8 @@ setuptools.setup(
     install_requires=application_dependencies,
     extras_require={
         "production": prod_dependencies,
+        "jsonmarshal": jsonmarshal_dependencies,
+        "pydantic": pydantic_dependencies,
         "test": test_dependencies,
         "lint": lint_dependencies,
         "docs": dev_dependencies,

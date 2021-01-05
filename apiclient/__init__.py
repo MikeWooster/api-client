@@ -1,4 +1,12 @@
 # Allow direct access to the base client and other methods.
+from contextlib import suppress
+
+with suppress(ImportError):
+    from apiclient.json import marshal_request, unmarshal_response
+
+with suppress(ImportError):
+    from apiclient.json import serialize, serialize_all_methods, serialize_request, serialize_response
+
 from apiclient.authentication_methods import (
     BasicAuthentication,
     HeaderAuthentication,
@@ -7,7 +15,6 @@ from apiclient.authentication_methods import (
 )
 from apiclient.client import APIClient
 from apiclient.decorates import endpoint
-from apiclient.json import marshal_request, unmarshal_response
 from apiclient.paginators import paginated
 from apiclient.request_formatters import JsonRequestFormatter
 from apiclient.response_handlers import (
