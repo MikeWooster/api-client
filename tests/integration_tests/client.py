@@ -2,8 +2,16 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from jsonmarshal import json_field
+from pydantic import BaseModel, Field
 
-from apiclient import APIClient, endpoint, paginated, retry_request, unmarshal_response
+from apiclient import (
+    APIClient,
+    endpoint,
+    paginated,
+    retry_request,
+    serialize_all_methods,
+    unmarshal_response,
+)
 
 
 def by_query_params_callable(response, prev_params):
@@ -105,3 +113,76 @@ class ClientWithJson(Client):
     @paginated(by_query_params=by_query_params_callable)
     def list_user_accounts_paginated(self, user_id):
         return self.get(Urls.accounts, params={"userId": user_id})
+
+
+class PDUserID(BaseModel):
+    user_id: int = Field(alias="userId")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class PDUserInfo(BaseModel):
+    first_name: str = Field(alias="firstName")
+    last_name: str = Field(alias="lastName")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class PDUser(PDUserID, PDUserInfo):
+    class Config:
+        allow_population_by_field_name = True
+
+
+class UpdatePDUser(PDUserID):
+    first_name: Optional[str] = Field(alias="firstName")
+    last_name: Optional[str] = Field(alias="lastName")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class PDAccount(BaseModel):
+    account_name: str = Field(alias="accountName")
+    number: str = Field(alias="number")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class PDAccountPage(BaseModel):
+    results: List[PDAccount]
+    page: int
+    next_page: Optional[int] = Field(alias="nextPage")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+@serialize_all_methods()
+class ClientWithPydantic(Client):
+    def list_users(self) -> List[PDUser]:
+        return super().list_users()
+
+    @retry_request
+    def get_user(self, data: PDUserID) -> PDUser:
+        url = Urls.user.format(id=data["userId"])
+        return self.get(url)
+
+    def create_user(self, data: PDUserInfo) -> PDUser:
+        return self.post(Urls.users, data=data)
+
+    def overwrite_user(self, data: PDUser) -> PDUser:
+        url = Urls.user.format(id=data["userId"])
+        return self.put(url, data=data)
+
+    def update_user(self, data: UpdatePDUser) -> PDUser:
+        return self.patch(Urls.user.format(id=data["userId"]), data=data)
+
+    def delete_user(self, user_id: int) -> dict:
+        return super().delete_user(user_id)
+
+    @paginated(by_query_params=by_query_params_callable)
+    def list_user_accounts_paginated(self, data: PDUserID) -> List[PDAccountPage]:
+        return self.get(Urls.accounts, params=data)
