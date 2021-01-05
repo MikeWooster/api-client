@@ -569,6 +569,7 @@ into the required dict for the endpoint:
   ```
 
 ## Extended Example
+
 ```python
 from apiclient import (
     APIClient,
