@@ -19,7 +19,7 @@ that code away from the clean abstraction you have designed.
 7. [Correctly encoding your outbound request data](#Request-Formatters)
 8. [Handling bad requests and responses](#Exceptions)
 9. [Endpoints as code](#Endpoints)
-10. [Marshalling requests/responses](#Marshalling)
+10. [Extensions](#Extensions)
 
 ## Installation
 
@@ -469,38 +469,17 @@ class Endpoint:
 "http://foo.com/search"
 ```
 
-## Marshalling
+## Extensions
 
-The following decorators have been provided to marshal request data as python dataclasses to json
-and to unmarshal json directly into a python dataclass.
+### Marshalling JSON
 
-```python
-# Marshal dataclass -> json
-@marshal_request(date_fmt: Optional[str] = None, datetime_fmt: Optional[str] = None)
+[api-client-jsonmarshal](https://github.com/MikeWooster/api-client-jsonmarshal): automatically
+marshal to/from JSON into plain python dataclasses. Full usage examples can be found in the extensions home page.
 
-# Unmarshal json -> dataclass
-@unmarshal_response(schema: T, date_fmt: Optional[str] = None, datetime_fmt: Optional[str] = None)
-```
+### Pydantic
 
-Usage:
-1. Define the schema for your api in python dataclasses.
-2. Add the `@unmarshal_response` decorator to the api client method to transform the response
-directly into your defined schema.
-   ```python
-   @unmarshal_response(List[Account])
-   def get_accounts():
-       ...
-   ```
-3. Add the `@marshal_request` decorator to the api client method to translate the incoming dataclass
-into the required json for the endpoint:
-   ```python
-   @marshal_request()
-   def create_account(account: Account):
-      ...
-   ```
-
-The marshalling functionality has been provided by: https://github.com/MikeWooster/jsonmarshal
-More usage examples can be found there.
+[api-client-pydantic](https://github.com/mom1/api-client-pydantic): validate request data and converting json straight 
+to pydantic class.
 
 ## Extended Example
 
