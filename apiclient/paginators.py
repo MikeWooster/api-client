@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from functools import wraps
 from typing import Callable
 
 from apiclient import APIClient
@@ -28,6 +29,7 @@ def paginated(by_query_params: Callable = None, by_url: Callable = None):
         strategy = UrlPaginatedRequestStrategy(by_url)
 
     def decorator(func):
+        @wraps(func)
         def wrap(client: APIClient, *args, **kwargs):
             with set_strategy(client, strategy) as temporary_client:
                 return func(temporary_client, *args, **kwargs)
