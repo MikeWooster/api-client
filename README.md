@@ -362,20 +362,6 @@ client = ClientImplementation(
 )
 ```
 
-### `YamlResponseHandler`
-Handler that parses the response data in `yaml` format and returns the
-dictionary.  If an error occurs trying to parse the yaml then an `UnexpectedError`
-will be raised.
-
-Example:
-```python
-client = ClientImplementation(
-    authentication_method=...,
-    response_handler=YamlResponseHandler,
-    request_formatter=...,
-)
-```
-
 ## Request Formatters
 
 Request formatters provide a way in which the outgoing request data can

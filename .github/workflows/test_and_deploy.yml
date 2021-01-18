@@ -28,7 +28,7 @@ jobs:
           tox -e lint
       - name: Unit Tests
         run: |
-          tox -e unittest
+          tox
 
   deploy:
     needs: test

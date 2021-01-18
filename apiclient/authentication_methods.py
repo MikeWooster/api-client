@@ -43,7 +43,7 @@ class QueryParameterAuthentication(BaseAuthenticationMethod):
 class HeaderAuthentication(BaseAuthenticationMethod):
     """Authentication provided within the header.
 
-    Normally associated with Oauth authoriazation, in the format:
+    Normally associated with Oauth authorization, in the format:
     "Authorization: Bearer <token>"
     """
 

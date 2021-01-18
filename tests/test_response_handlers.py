@@ -4,7 +4,7 @@ from xml.etree import ElementTree
 
 import pytest
 
-from apiclient import JsonResponseHandler, RequestsResponseHandler, XmlResponseHandler, YamlResponseHandler
+from apiclient import JsonResponseHandler, RequestsResponseHandler, XmlResponseHandler
 from apiclient.exceptions import ResponseParseError
 from apiclient.response_handlers import BaseResponseHandler
 from tests.helpers import build_response
@@ -67,31 +67,6 @@ class TestXmlResponseHandler:
         with pytest.raises(ResponseParseError) as exc_info:
             self.handler.get_request_data(response)
         assert str(exc_info.value) == "Unable to parse response data to xml. data='foo'"
-
-    def test_blank_response_body_returns_none(self, blank_response):
-        data = self.handler.get_request_data(blank_response)
-        assert data is None
-
-
-class TestYamlResponseHandler:
-    handler = YamlResponseHandler
-
-    def test_response_data_is_parsed_correctly(self):
-        document = """
-          a: 1
-          b:
-            c: 2
-            d: 3
-        """
-        response = build_response(data=document)
-        data = self.handler.get_request_data(response)
-        assert data == {"a": 1, "b": {"c": 2, "d": 3}}
-
-    def test_bad_yaml_raises_response_parse_error(self):
-        response = build_response(data="foo:    bar:   2")
-        with pytest.raises(ResponseParseError) as exc_info:
-            self.handler.get_request_data(response)
-        assert str(exc_info.value) == "Unable to parse response data to yaml. data='foo:    bar:   2'"
 
     def test_blank_response_body_returns_none(self, blank_response):
         data = self.handler.get_request_data(blank_response)
