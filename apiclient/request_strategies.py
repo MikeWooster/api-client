@@ -2,9 +2,9 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, Type
 
 import requests
-from requests import Response
 
 from apiclient import exceptions
+from apiclient.response import RequestsResponse, Response
 from apiclient.utils.typing import OptionalDict
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -85,14 +85,16 @@ class RequestStrategy(BaseRequestStrategy):
         Delegates response parsing to the response handler.
         """
         try:
-            response = request_method(
-                endpoint,
-                params=self._get_request_params(params),
-                headers=self._get_request_headers(headers),
-                auth=self._get_username_password_authentication(),
-                data=self._get_formatted_data(data),
-                timeout=self._get_request_timeout(),
-                **kwargs,
+            response = RequestsResponse(
+                request_method(
+                    endpoint,
+                    params=self._get_request_params(params),
+                    headers=self._get_request_headers(headers),
+                    auth=self._get_username_password_authentication(),
+                    data=self._get_formatted_data(data),
+                    timeout=self._get_request_timeout(),
+                    **kwargs,
+                )
             )
         except Exception as error:
             raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
@@ -126,7 +128,7 @@ class RequestStrategy(BaseRequestStrategy):
 
     def _check_response(self, response: Response):
         """Raise a custom exception if the response is not OK."""
-        if response.status_code < 200 or response.status_code >= 300:
+        if response.get_status_code() < 200 or response.get_status_code() >= 300:
             self._handle_bad_response(response)
 
     def _decode_response_data(self, response: Response):
@@ -134,11 +136,14 @@ class RequestStrategy(BaseRequestStrategy):
 
     def _handle_bad_response(self, response: Response):
         """Convert the error into an understandable client exception."""
-        exception_class = self._get_exception_class(response.status_code)
+        exception_class = self._get_exception_class(response.get_status_code())
         raise exception_class(
-            message=f"{response.status_code} Error: {response.reason} for url: {response.url}",
-            status_code=response.status_code,
-            info=response.text,
+            message=(
+                f"{response.get_status_code()} Error: {response.get_status_reason()} "
+                f"for url: {response.get_requested_url()}"
+            ),
+            status_code=response.get_status_code(),
+            info=response.get_raw_data(),
         )
 
     @staticmethod

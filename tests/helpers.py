@@ -2,11 +2,12 @@ import json as json_lib
 from io import BytesIO
 from unittest.mock import Mock
 
-from requests import Response
+import requests
 
 from apiclient import APIClient, JsonRequestFormatter, JsonResponseHandler, NoAuthentication
 from apiclient.request_formatters import BaseRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy
+from apiclient.response import RequestsResponse, Response
 from apiclient.response_handlers import BaseResponseHandler
 
 mock_response_handler_call = Mock()
@@ -63,8 +64,8 @@ class NoOpRequestStrategy(BaseRequestStrategy):
 
 
 def build_response(data=None, json=None, status_code: int = 200) -> Response:
-    """Return a requests.Response object with the data set as the content."""
-    response = Response()
+    """Builds a requests.Response object with the data set as the content."""
+    response = requests.Response()
     response.status_code = status_code
     response.headers = {
         "Connection": "keep-alive",
@@ -77,7 +78,7 @@ def build_response(data=None, json=None, status_code: int = 200) -> Response:
     response.raw = BytesIO(bytes(data, encoding="utf-8"))
     response.reason = "OK"
     response.url = "https://jsonplaceholder.typicode.com/todos"
-    return response
+    return RequestsResponse(response)
 
 
 def client_factory(build_with=None, request_strategy=None):

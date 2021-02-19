@@ -6,6 +6,7 @@ import pytest
 
 from apiclient import JsonResponseHandler, RequestsResponseHandler, XmlResponseHandler
 from apiclient.exceptions import ResponseParseError
+from apiclient.response import RequestsResponse
 from apiclient.response_handlers import BaseResponseHandler
 from tests.helpers import build_response
 
@@ -28,7 +29,7 @@ class TestRequestsResponseHandler:
     handler = RequestsResponseHandler
 
     def test_original_response_is_returned(self):
-        data = self.handler.get_request_data(sentinel.response)
+        data = self.handler.get_request_data(RequestsResponse(sentinel.response))
         assert data == sentinel.response
 
 
