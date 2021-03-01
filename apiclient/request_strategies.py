@@ -1,9 +1,9 @@
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Type
+from typing import TYPE_CHECKING, Callable
 
 import requests
 
-from apiclient import exceptions
+from apiclient.exceptions import UnexpectedError
 from apiclient.response import RequestsResponse, Response
 from apiclient.utils.typing import OptionalDict
 
@@ -97,7 +97,7 @@ class RequestStrategy(BaseRequestStrategy):
                 )
             )
         except Exception as error:
-            raise exceptions.UnexpectedError(f"Error when contacting '{endpoint}'") from error
+            raise UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)
         return self._decode_response_data(response)
@@ -110,7 +110,7 @@ class RequestStrategy(BaseRequestStrategy):
         return params
 
     def _get_request_headers(self, headers: OptionalDict) -> dict:
-        """Return dictionary with any additinoal authentication headers."""
+        """Return dictionary with any additional authentication headers."""
         if headers is None:
             headers = {}
         headers.update(self.get_client().get_default_headers())
@@ -128,7 +128,8 @@ class RequestStrategy(BaseRequestStrategy):
 
     def _check_response(self, response: Response):
         """Raise a custom exception if the response is not OK."""
-        if response.get_status_code() < 200 or response.get_status_code() >= 300:
+        status_code = response.get_status_code()
+        if status_code < 200 or status_code >= 300:
             self._handle_bad_response(response)
 
     def _decode_response_data(self, response: Response):
@@ -136,27 +137,7 @@ class RequestStrategy(BaseRequestStrategy):
 
     def _handle_bad_response(self, response: Response):
         """Convert the error into an understandable client exception."""
-        exception_class = self._get_exception_class(response.get_status_code())
-        raise exception_class(
-            message=(
-                f"{response.get_status_code()} Error: {response.get_status_reason()} "
-                f"for url: {response.get_requested_url()}"
-            ),
-            status_code=response.get_status_code(),
-            info=response.get_raw_data(),
-        )
-
-    @staticmethod
-    def _get_exception_class(status_code: int) -> Type[exceptions.APIRequestError]:
-        if 300 <= status_code < 400:
-            exception_class = exceptions.RedirectionError
-        elif 400 <= status_code < 500:
-            exception_class = exceptions.ClientError
-        elif 500 <= status_code < 600:
-            exception_class = exceptions.ServerError
-        else:
-            exception_class = exceptions.UnexpectedError
-        return exception_class
+        raise self.get_client().get_error_handler().get_exception(response)
 
 
 class QueryParamPaginatedRequestStrategy(RequestStrategy):

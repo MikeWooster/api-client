@@ -5,7 +5,7 @@ import pytest
 
 from apiclient import JsonRequestFormatter, JsonResponseHandler, NoAuthentication
 from apiclient.exceptions import ClientError, RedirectionError, ServerError, UnexpectedError
-from tests.integration_tests.client import Client, Urls
+from tests.integration_tests.client import Client, ClientErrorHandler, InternalError, OtherError, Urls
 
 
 def test_client_response(cassette):
@@ -83,6 +83,28 @@ def test_client_response(cassette):
     with pytest.raises(UnexpectedError) as exc_info:
         client.get("mock://testserver")
     assert str(exc_info.value) == "Error when contacting 'mock://testserver'"
+
+    # User 10 failed on first attempt 500 with 20001 code
+    client.set_error_handler(ClientErrorHandler)
+    with pytest.raises(InternalError) as exc_info:
+        client.list_user_accounts_paginated(user_id=10)
+    assert str(exc_info.value) == "Internal error."
+    # failed on second 400 with 20002 code
+    with pytest.raises(OtherError) as exc_info:
+        client.list_user_accounts_paginated(user_id=10)
+    assert str(exc_info.value) == "Other error."
+    # failed on third 500 with no_code
+    with pytest.raises(ServerError) as exc_info:
+        client.list_user_accounts_paginated(user_id=10)
+    assert str(exc_info.value) == "500 Error: SERVER ERROR for url: http://testserver/accounts?userId=10"
+    # and 504 with html body
+    with pytest.raises(ServerError) as exc_info:
+        client.list_user_accounts_paginated(user_id=10)
+    assert str(exc_info.value) == "504 Error: SERVER ERROR for url: http://testserver/accounts?userId=10"
+    # and 500 with empty body
+    with pytest.raises(ServerError) as exc_info:
+        client.list_user_accounts_paginated(user_id=10)
+    assert str(exc_info.value) == "500 Error: SERVER ERROR for url: http://testserver/accounts?userId=10"
 
 
 @pytest.mark.parametrize(

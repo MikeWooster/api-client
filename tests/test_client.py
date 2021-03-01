@@ -29,6 +29,16 @@ def test_client_initialization_with_invalid_response_handler():
     assert str(exc_info.value) == "provided response_handler must be a subclass of BaseResponseHandler."
 
 
+def test_client_initialization_with_invalid_exception_handler():
+    with pytest.raises(RuntimeError) as exc_info:
+        MinimalClient(
+            authentication_method=NoAuthentication(),
+            error_handler=None,
+            request_formatter=MockRequestFormatter,
+        )
+    assert str(exc_info.value) == "provided error_handler must be a subclass of BaseErrorHandler."
+
+
 def test_client_initialization_with_invalid_requests_handler():
     with pytest.raises(RuntimeError) as exc_info:
         MinimalClient(

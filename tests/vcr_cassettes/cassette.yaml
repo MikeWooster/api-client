@@ -198,5 +198,85 @@ interactions:
     headers:
       Content-Type: [application/json; charset=utf-8]
     status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=10
+  response:
+    body:
+      string: '{"error_code": 20001, "message": "AAAA Internal error"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 500, message: SERVER ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=10
+  response:
+    body:
+      string: '{"error_code": 20002, "message": "some mistake"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 400, message: CLIENT ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=10
+  response:
+    body:
+      string: '{"error_code": "no_code", "message": "some mistake"}'
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 500, message: SERVER ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=10
+  response:
+    body:
+      string: '<html><body><h1>504 Gateway Time-out</h1> The server didn`t respond in time. </body></html>'
+    headers:
+      Content-Type: [text/html; charset=utf-8]
+    status: {code: 504, message: SERVER ERROR}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-type: [application/json]
+      User-Agent: [python-requests/2.21.0]
+    method: GET
+    uri: http://testserver/accounts?userId=10
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type: [application/json; charset=utf-8]
+    status: {code: 500, message: SERVER ERROR}
 
 version: 1
