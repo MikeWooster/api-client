@@ -2,6 +2,7 @@ import logging
 from typing import Any, Optional, Type
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
+from apiclient.error_handlers import BaseErrorHandler, ErrorHandler
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
@@ -19,6 +20,7 @@ class APIClient:
         authentication_method: BaseAuthenticationMethod = NoAuthentication(),
         response_handler: Type[BaseResponseHandler] = RequestsResponseHandler,
         request_formatter: Type[BaseRequestFormatter] = NoOpRequestFormatter,
+        error_handler: Type[BaseErrorHandler] = ErrorHandler,
     ):
         # Set default values
         self._default_headers = {}
@@ -31,6 +33,7 @@ class APIClient:
         # Set client strategies
         self.set_authentication_method(authentication_method)
         self.set_response_handler(response_handler)
+        self.set_error_handler(error_handler)
         self.set_request_formatter(request_formatter)
         self.set_request_strategy(RequestStrategy())
 
@@ -60,6 +63,14 @@ class APIClient:
         if not (response_handler and issubclass(response_handler, BaseResponseHandler)):
             raise RuntimeError("provided response_handler must be a subclass of BaseResponseHandler.")
         self._response_handler = response_handler
+
+    def get_error_handler(self) -> Type[BaseErrorHandler]:
+        return self._error_handler
+
+    def set_error_handler(self, error_handler: Type[BaseErrorHandler]):
+        if not (error_handler and issubclass(error_handler, BaseErrorHandler)):
+            raise RuntimeError("provided error_handler must be a subclass of BaseErrorHandler.")
+        self._error_handler = error_handler
 
     def get_request_formatter(self) -> Type[BaseRequestFormatter]:
         return self._request_formatter
@@ -100,6 +111,7 @@ class APIClient:
             authentication_method=self.get_authentication_method(),
             response_handler=self.get_response_handler(),
             request_formatter=self.get_request_formatter(),
+            error_handler=self.get_error_handler(),
         )
         new_client.set_request_strategy(self.get_request_strategy())
         new_client.set_session(self.get_session())
