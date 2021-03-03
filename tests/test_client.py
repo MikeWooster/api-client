@@ -3,6 +3,7 @@ from unittest.mock import Mock, sentinel
 import pytest
 
 from apiclient import NoAuthentication
+from apiclient.authentication_methods import BaseAuthenticationMethod
 from apiclient.client import APIClient
 from apiclient.request_strategies import BaseRequestStrategy
 from tests.helpers import MinimalClient, MockRequestFormatter, MockResponseHandler, client_factory
@@ -11,7 +12,7 @@ from tests.helpers import MinimalClient, MockRequestFormatter, MockResponseHandl
 def test_client_initialization_with_invalid_authentication_method():
     with pytest.raises(RuntimeError) as exc_info:
         MinimalClient(
-            authentication_method=None,
+            authentication_method=object(),
             response_handler=MockResponseHandler,
             request_formatter=MockRequestFormatter,
         )
@@ -47,6 +48,17 @@ def test_client_initialization_with_invalid_requests_handler():
             request_formatter=None,
         )
     assert str(exc_info.value) == "provided request_formatter must be a subclass of BaseRequestFormatter."
+
+
+def test_client_initialization_with_invalid_request_strategy():
+    with pytest.raises(RuntimeError) as exc_info:
+        MinimalClient(
+            authentication_method=NoAuthentication(),
+            response_handler=MockResponseHandler,
+            request_formatter=MockRequestFormatter,
+            request_strategy=object(),
+        )
+    assert str(exc_info.value) == "provided request_strategy must be an instance of BaseRequestStrategy."
 
 
 def test_get_method_delegates_to_request_strategy():
@@ -141,3 +153,15 @@ def test_client_clone_method():
     client.set_session(sentinel.session)
     new_client = client.clone()
     assert new_client.get_session() is client.get_session()
+
+
+def test_get_authentication_method_with_user_defined():
+    custom_authentication_method = BaseAuthenticationMethod()
+    client = MinimalClient(authentication_method=custom_authentication_method)
+    assert client.get_authentication_method() is custom_authentication_method
+
+
+def test_get_request_strategy_with_user_defined():
+    custom_request_strategy = BaseRequestStrategy()
+    client = MinimalClient(request_strategy=custom_request_strategy)
+    assert client.get_request_strategy() is custom_request_strategy
