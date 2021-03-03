@@ -17,10 +17,11 @@ DEFAULT_TIMEOUT = 10.0
 class APIClient:
     def __init__(
         self,
-        authentication_method: BaseAuthenticationMethod = NoAuthentication(),
+        authentication_method: Optional[BaseAuthenticationMethod] = None,
         response_handler: Type[BaseResponseHandler] = RequestsResponseHandler,
         request_formatter: Type[BaseRequestFormatter] = NoOpRequestFormatter,
         error_handler: Type[BaseErrorHandler] = ErrorHandler,
+        request_strategy: Optional[BaseRequestStrategy] = None,
     ):
         # Set default values
         self._default_headers = {}
@@ -31,11 +32,11 @@ class APIClient:
         self._session = None
 
         # Set client strategies
-        self.set_authentication_method(authentication_method)
+        self.set_authentication_method(authentication_method or NoAuthentication())
         self.set_response_handler(response_handler)
         self.set_error_handler(error_handler)
         self.set_request_formatter(request_formatter)
-        self.set_request_strategy(RequestStrategy())
+        self.set_request_strategy(request_strategy or RequestStrategy())
 
         # Perform any one time authentication required by api
         self._authentication_method.perform_initial_auth(self)
