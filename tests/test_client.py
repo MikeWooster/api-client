@@ -9,6 +9,7 @@ from tests.helpers import MinimalClient, MockRequestFormatter, MockResponseHandl
 
 
 def test_client_initialization_with_invalid_authentication_method():
+    assert 0
     with pytest.raises(RuntimeError) as exc_info:
         MinimalClient(
             authentication_method=None,
