@@ -1,10 +1,27 @@
 name: Unit Tests
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
+  depcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python Version
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+          pip install -e .
+      - name: Dependency Checks
+        run: |
+          python ./scripts/dep_checker.py
 
   test:
+    needs: depcheck
     runs-on: ubuntu-latest
     strategy:
       matrix:
