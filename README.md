@@ -1,3 +1,5 @@
+[![Unit Tests](https://github.com/MikeWooster/api-client/actions/workflows/test.yml/badge.svg)](https://github.com/MikeWooster/api-client/actions/workflows/test.yml)
+
 # Python API Client
 
 A client for communicating with an api should be a clean abstraction
