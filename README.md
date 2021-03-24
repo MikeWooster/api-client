@@ -436,6 +436,72 @@ An unexpected error occurred when using the client.  This will typically happen 
 to make the request, for example, the client never receives a response.  It can also occur to
 unexpected status codes (>= 600).
 
+## Custom Error Handling
+
+Error handlers allow you to customize the way request errors are handled in the application.
+
+Create a new error handler, extending `BaseErrorHandler` and implement the `get_exception`
+static method.
+
+Pass the custom error handler into your client upon initialization.
+
+Example:
+```python
+from apiclient.error_handlers import BaseErrorHandler
+from apiclient import exceptions
+from apiclient.response import Response
+
+class MyErrorHandler(BaseErrorHandler):
+
+    @staticmethod
+    def get_exception(response: Response) -> exceptions.APIRequestError:
+        """Parses client errors to extract bad request reasons."""
+        if 400 <= response.get_status_code() < 500:
+            json = response.get_json()
+            return exceptions.ClientError(json["error"]["reason"])
+        
+        return exceptions.APIRequestError("something went wrong")
+        
+```
+In the above example, you will notice that we are utilising an internal
+`Response` object. This has been designed to abstract away the underlying response
+returned from whatever strategy that you are using. The `Response` contains the following
+methods:
+
+* `get_original`: returns the underlying response object. This has been implemented
+for convenience and shouldn't be relied on.
+* `get_status_code`: returns the integer status code.
+* `get_raw_data`: returns the textual data from the response.
+* `get_json`: should return the json from the response.
+* `get_status_reason`: returns the reason for any HTTP error code.
+* `get_requested_url`: returns the url that the client was requesting.
+
+## Request Strategy
+
+The design of the client provides a stub of a client, exposing the required methods; `get`, 
+`post`, etc. And this then calls the implemented methods of a request strategy.
+
+This allows us to swap in/out strategies when needed. I.e. you can write your own
+strategy that implements a different library (e.g. `urllib`). Or you could pass in a
+mock strategy for testing purposes.
+
+Example strategy for testing:
+```python
+from unittest.mock import Mock
+
+from apiclient import APIClient
+from apiclient.request_strategies import BaseRequestStrategy
+
+def test_get_method():
+    """test that the get method is called on the underlying strategy.
+    
+    This does not execute any external HTTP call.
+    """
+    mock_strategy = Mock(spec=BaseRequestStrategy)
+    client = APIClient(request_strategy=mock_strategy)
+    client.get("http://google.com")
+    mock_strategy.get.assert_called_with("http://google.com", params=None)
+```
 
 ## Endpoints
 

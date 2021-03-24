@@ -1,7 +1,8 @@
-from unittest.mock import call, sentinel
+from unittest.mock import Mock, call, sentinel
 
 import pytest
 
+from apiclient import APIClient
 from apiclient.request_strategies import (
     BaseRequestStrategy,
     QueryParamPaginatedRequestStrategy,
@@ -193,3 +194,10 @@ def test_url_paginated_strategy_delegates_to_callable(mock_requests):
     history = mock_requests.request_history
     assert history[0].url == "mock://testserver.com"
     assert history[1].url == "mock://testserver.com/2"
+
+
+def test_mock_strategy():
+    mock_strategy = Mock(spec=BaseRequestStrategy)
+    client = APIClient(request_strategy=mock_strategy)
+    client.get("http://google.com")
+    mock_strategy.get.assert_called_with("http://google.com", params=None)
