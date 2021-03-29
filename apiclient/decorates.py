@@ -1,3 +1,6 @@
+import inspect
+
+
 def endpoint(cls_=None, base_url=None):
     """Decorator for automatically constructing urls from a base_url and defined resources."""
 
@@ -19,8 +22,8 @@ def _process_class(cls, base_url):
     else:
         base_url = base_url.rstrip("/")
 
-    for name, value in cls.__dict__.items():
-        if name.startswith("_"):
+    for name, value in inspect.getmembers(cls):
+        if name.startswith("_") or inspect.ismethod(value) or inspect.isfunction(value):
             # Ignore any private or class attributes.
             continue
         new_value = str(value).lstrip("/")
