@@ -1,5 +1,6 @@
 import logging
 from typing import Any, Optional, Type
+from copy import copy
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.error_handlers import BaseErrorHandler, ErrorHandler
@@ -108,15 +109,7 @@ class APIClient:
 
     def clone(self):
         """Enable Prototype pattern on client."""
-        new_client = type(self)(
-            authentication_method=self.get_authentication_method(),
-            response_handler=self.get_response_handler(),
-            request_formatter=self.get_request_formatter(),
-            error_handler=self.get_error_handler(),
-        )
-        new_client.set_request_strategy(self.get_request_strategy())
-        new_client.set_session(self.get_session())
-        return new_client
+        return copy(self)
 
     def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""

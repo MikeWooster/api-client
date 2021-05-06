@@ -20,15 +20,23 @@ def next_page_url(response, previous_page_url):
 
 
 class QueryPaginatedClient(APIClient):
+    def __init__(self, base_url, **kwargs):
+        self.base_url = base_url
+        super().__init__(**kwargs)
+
     @paginated(by_query_params=next_page_param)
     def make_read_request(self):
-        return self.get(endpoint="mock://testserver.com")
+        return self.get(endpoint=self.base_url)
 
 
 class UrlPaginatedClient(APIClient):
+    def __init__(self, base_url, **kwargs):
+        self.base_url = base_url
+        super().__init__(**kwargs)
+
     @paginated(by_url=next_page_url)
     def make_read_request(self):
-        return self.get(endpoint="mock://testserver.com")
+        return self.get(endpoint=self.base_url)
 
 
 def test_query_parameter_pagination(mock_requests):
@@ -48,6 +56,7 @@ def test_query_parameter_pagination(mock_requests):
     )
     # mock_requests.get.side_effect = [build_response(json=page_data) for page_data in response_data]
     client = QueryPaginatedClient(
+        base_url="mock://testserver.com",
         authentication_method=NoAuthentication(),
         response_handler=JsonResponseHandler,
         request_formatter=JsonRequestFormatter,
@@ -81,6 +90,7 @@ def test_url_parameter_pagination(mock_requests):
         {"page2": "data", "next": None},
     ]
     client = UrlPaginatedClient(
+        base_url="mock://testserver.com",
         authentication_method=NoAuthentication(),
         response_handler=JsonResponseHandler,
         request_formatter=JsonRequestFormatter,
