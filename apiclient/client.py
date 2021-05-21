@@ -1,6 +1,6 @@
 import logging
-from typing import Any, Optional, Type
 from copy import copy
+from typing import Any, Optional, Type
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.error_handlers import BaseErrorHandler, ErrorHandler
