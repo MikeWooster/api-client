@@ -27,11 +27,9 @@ class EndpointFromEnvironment:
     search = "search"
 
 
-@endpoint(base_url="https://food.com")
 class BaseEndpoint:
     get_apples = "apples"
     get_grapes = "grapes"
-
 
 @endpoint(base_url="https://fruits.com")
 class SubEndpoint(BaseEndpoint):
@@ -68,8 +66,6 @@ def test_decorated_endpoint_loaded_from_environment_variable():
 
 
 def test_decorator_inherits_attributes():
-    assert BaseEndpoint.get_apples == "https://food.com/apples"
-    assert BaseEndpoint.get_grapes == "https://food.com/grapes"
     assert SubEndpoint.get_apples == "https://fruits.com/apples"
     assert SubEndpoint.get_grapes == "https://fruits.com/grapes"
     assert SubEndpoint.get_hamburgers == "https://fruits.com/hamburgers"
