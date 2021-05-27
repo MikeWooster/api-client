@@ -31,6 +31,9 @@ class BaseEndpoint:
     get_apples = "apples"
     get_grapes = "grapes"
 
+    def method(self):
+        pass
+
 
 @endpoint(base_url="https://fruits.com")
 class SubEndpoint(BaseEndpoint):
