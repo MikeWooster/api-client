@@ -31,9 +31,11 @@ class BaseEndpoint:
     get_apples = "apples"
     get_grapes = "grapes"
 
+
 @endpoint(base_url="https://fruits.com")
 class SubEndpoint(BaseEndpoint):
     get_hamburgers = "hamburgers"
+    _ignore_attr = "ignored"
 
 
 def test_endpoint():
@@ -66,6 +68,9 @@ def test_decorated_endpoint_loaded_from_environment_variable():
 
 
 def test_decorator_inherits_attributes():
+    assert BaseEndpoint.get_apples == "apples"
+    assert BaseEndpoint.get_grapes == "grapes"
     assert SubEndpoint.get_apples == "https://fruits.com/apples"
     assert SubEndpoint.get_grapes == "https://fruits.com/grapes"
     assert SubEndpoint.get_hamburgers == "https://fruits.com/hamburgers"
+    assert SubEndpoint._ignore_attr == "ignored"
