@@ -27,6 +27,20 @@ class EndpointFromEnvironment:
     search = "search"
 
 
+class BaseEndpoint:
+    get_apples = "apples"
+    get_grapes = "grapes"
+
+    def method(self):
+        pass
+
+
+@endpoint(base_url="https://fruits.com")
+class SubEndpoint(BaseEndpoint):
+    get_hamburgers = "hamburgers"
+    _ignore_attr = "ignored"
+
+
 def test_endpoint():
     assert Endpoint.search == "http://foo.com/search"
     assert Endpoint.integer == "http://foo.com/3"
@@ -54,3 +68,12 @@ def test_decorator_does_not_modify_protected_attributes():
 
 def test_decorated_endpoint_loaded_from_environment_variable():
     assert EndpointFromEnvironment.search == "http://environment.com/search"
+
+
+def test_decorator_inherits_attributes():
+    assert BaseEndpoint.get_apples == "apples"
+    assert BaseEndpoint.get_grapes == "grapes"
+    assert SubEndpoint.get_apples == "https://fruits.com/apples"
+    assert SubEndpoint.get_grapes == "https://fruits.com/grapes"
+    assert SubEndpoint.get_hamburgers == "https://fruits.com/hamburgers"
+    assert SubEndpoint._ignore_attr == "ignored"
