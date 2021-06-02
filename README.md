@@ -22,6 +22,7 @@ that code away from the clean abstraction you have designed.
 8. [Handling bad requests and responses](#Exceptions)
 9. [Endpoints as code](#Endpoints)
 10. [Extensions](#Extensions)
+11. [Roadmap](#Roadmap)
 
 ## Installation
 
@@ -661,3 +662,7 @@ Many thanks to [JetBrains](https://www.jetbrains.com/?from=api-client) for suppl
 of this tool.
 
 ![JetBrains](readme-data/jetbrains.svg)
+
+## Roadmap
+
+1. Enable async support for APIClient.
