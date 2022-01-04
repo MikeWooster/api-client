@@ -128,6 +128,7 @@ the pages are specified in the query parameters, or by modifying the url.
 Usage is simple in both cases; paginator decorators take a Callable with two required arguments:
 - `by_query_params` -> callable takes `response` and `previous_page_params`.
 - `by_url` -> callable takes `respones` and `previous_page_url`.
+
 The callable will need to return either the params in the case of `by_query_params`, or a new url in the
 case of `by_url`.
 If the response is the last page, the function should return None.
