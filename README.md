@@ -135,7 +135,7 @@ If the response is the last page, the function should return None.
 Usage:
 
 ```python
-from apiclient import paginated
+from apiclient.paginators import paginated
 
 
 def next_page_by_params(response, previous_page_params):
