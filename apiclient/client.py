@@ -5,7 +5,7 @@ from typing import Any, Optional, Type
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.error_handlers import BaseErrorHandler, ErrorHandler
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
-from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
+from apiclient.request_strategies import AsyncRequestStrategy, BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
 from apiclient.utils.typing import OptionalDict
 
@@ -15,7 +15,7 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10.0
 
 
-class APIClient:
+class AbstractClient:
     def __init__(
         self,
         authentication_method: Optional[BaseAuthenticationMethod] = None,
@@ -37,10 +37,13 @@ class APIClient:
         self.set_response_handler(response_handler)
         self.set_error_handler(error_handler)
         self.set_request_formatter(request_formatter)
-        self.set_request_strategy(request_strategy or RequestStrategy())
+        self.set_request_strategy(request_strategy or self.get_default_request_strategy())
 
         # Perform any one time authentication required by api
         self._authentication_method.perform_initial_auth(self)
+
+    def get_default_request_strategy(self):  # pragma: no cover
+        raise NotImplementedError
 
     def get_session(self) -> Any:
         return self._session
@@ -135,3 +138,44 @@ class APIClient:
         """Remove resource with DELETE endpoint."""
         LOG.debug("DELETE %s", endpoint)
         return self.get_request_strategy().delete(endpoint, params=params, **kwargs)
+
+
+class APIClient(AbstractClient):
+    def get_default_request_strategy(self):
+        return RequestStrategy()
+
+
+class AsyncAPIClient(AbstractClient):
+    async def __aenter__(self):
+        session = await self._request_strategy.create_session()
+        self.set_session(session)
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        session = self.get_session()
+        if session:
+            await session.close()
+        self.set_session(None)
+
+    def get_default_request_strategy(self):
+        return AsyncRequestStrategy()
+
+    async def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+        """Send data and return response data from POST endpoint."""
+        return await self.get_request_strategy().post(endpoint, data=data, params=params, **kwargs)
+
+    async def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
+        """Return response data from GET endpoint."""
+        return await self.get_request_strategy().get(endpoint, params=params, **kwargs)
+
+    async def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+        """Send data to overwrite resource and return response data from PUT endpoint."""
+        return await self.get_request_strategy().put(endpoint, data=data, params=params, **kwargs)
+
+    async def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+        """Send data to update resource and return response data from PATCH endpoint."""
+        return await self.get_request_strategy().patch(endpoint, data=data, params=params, **kwargs)
+
+    async def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
+        """Remove resource with DELETE endpoint."""
+        return await self.get_request_strategy().delete(endpoint, params=params, **kwargs)
