@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Callable
 
-from apiclient import APIClient
+from apiclient.client import APIClient
 from apiclient.request_strategies import (
     BaseRequestStrategy,
     QueryParamPaginatedRequestStrategy,
