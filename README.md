@@ -340,7 +340,7 @@ client = ClientImplementation(
 
 ### `JsonResponseHandler`
 Handler that parses the response data to `json` and returns the dictionary.
-If an error occurs trying to parse to json then a `UnexpectedError`
+If an error occurs trying to parse to json then a `ResponseParseError`
 will be raised.
 
 Example:
@@ -354,7 +354,7 @@ client = ClientImplementation(
 
 ### `XmlResponseHandler`
 Handler that parses the response data to an `xml.etree.ElementTree.Element`.
-If an error occurs trying to parse to xml then a `UnexpectedError`
+If an error occurs trying to parse to xml then a `ResponseParseError`
 will be raised.
 
 Example:
