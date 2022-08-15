@@ -1,5 +1,7 @@
+import json
 from typing import Any
 
+import aiohttp
 import requests
 
 from apiclient.utils.typing import JsonType
@@ -62,3 +64,26 @@ class RequestsResponse(Response):
 
     def get_requested_url(self) -> str:
         return self._response.url
+
+
+class AioHttpResponse(RequestsResponse):
+    """Implementation of the response for a requests.response type."""
+
+    def __init__(self, response: aiohttp.ClientResponse, content: bytes):
+        self._response = response
+        self._content = content
+        self._text = ""
+
+    def get_status_code(self) -> int:
+        return self._response.status
+
+    def get_raw_data(self) -> str:
+        if not self._text:
+            self._text = self._content.decode(self._response.get_encoding(), errors="strict")
+        return self._text
+
+    def get_json(self) -> JsonType:
+        return json.loads(self._text)
+
+    def get_requested_url(self) -> str:
+        return str(self._response.url)

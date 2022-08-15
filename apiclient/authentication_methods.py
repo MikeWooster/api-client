@@ -6,7 +6,7 @@ from apiclient.utils.typing import BasicAuthType, OptionalStr
 if TYPE_CHECKING:  # pragma: no cover
     # Stupid way of getting around cyclic imports when
     # using typehinting.
-    from apiclient import APIClient
+    from apiclient.client import AbstractClient
 
 
 class BaseAuthenticationMethod:
@@ -19,7 +19,7 @@ class BaseAuthenticationMethod:
     def get_username_password_authentication(self) -> Optional[BasicAuthType]:
         return None
 
-    def perform_initial_auth(self, client: "APIClient"):
+    def perform_initial_auth(self, client: "AbstractClient"):
         pass
 
 
@@ -91,7 +91,7 @@ class CookieAuthentication(BaseAuthenticationMethod):
         self._auth_url = auth_url
         self._authentication = authentication
 
-    def perform_initial_auth(self, client: "APIClient"):
+    def perform_initial_auth(self, client: "AbstractClient"):
         client.get(
             self._auth_url,
             headers=self._authentication.get_headers(),

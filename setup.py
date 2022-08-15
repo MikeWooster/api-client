@@ -3,9 +3,9 @@
 import setuptools
 
 # Pinning tenacity as the api has changed slightly which breaks all tests.
-application_dependencies = ["requests>=2.16", "tenacity>=5.1.0"]
+application_dependencies = ["requests>=2.16", "aiohttp>=3.8", "tenacity>=5.1.0"]
 prod_dependencies = []
-test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock"]
+test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock", "pytest-asyncio", "aioresponses"]
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
 dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]

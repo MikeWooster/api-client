@@ -1,7 +1,7 @@
 from enum import IntEnum, unique
 from json import JSONDecodeError
 
-from apiclient import APIClient, endpoint, paginated, retry_request
+from apiclient import APIClient, AsyncAPIClient, endpoint, paginated, retry_request
 from apiclient.error_handlers import ErrorHandler
 from apiclient.exceptions import APIRequestError
 from apiclient.response import Response
@@ -104,3 +104,33 @@ class Client(APIClient):
     @paginated(by_query_params=by_query_params_callable)
     def list_user_accounts_paginated(self, user_id):
         return self.get(Urls.accounts, params={"userId": user_id})
+
+
+class AsyncClient(AsyncAPIClient):
+    def get_request_timeout(self):
+        return 0.1
+
+    async def list_users(self):
+        return await self.get(Urls.users)
+
+    async def create_user(self, first_name, last_name):
+        data = {"firstName": first_name, "lastName": last_name}
+        return await self.post(Urls.users, data=data)
+
+    async def overwrite_user(self, user_id, first_name, last_name):
+        data = {"firstName": first_name, "lastName": last_name}
+        url = Urls.user.format(id=user_id)
+        return await self.put(url, data=data)
+
+    async def update_user(self, user_id, first_name=None, last_name=None):
+        data = {}
+        if first_name:
+            data["firstName"] = first_name
+        if last_name:
+            data["lastName"] = last_name
+        url = Urls.user.format(id=user_id)
+        return await self.patch(url, data=data)
+
+    async def delete_user(self, user_id):
+        url = Urls.user.format(id=user_id)
+        return await self.delete(url)

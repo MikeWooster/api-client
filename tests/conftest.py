@@ -6,6 +6,7 @@ import pytest
 import requests
 import requests_mock
 import vcr
+from aioresponses import aioresponses
 
 from apiclient import APIClient
 from apiclient.request_formatters import BaseRequestFormatter
@@ -70,3 +71,9 @@ def mock_client():
     return MockClient(
         client=_mock_client, request_formatter=mock_request_formatter, response_handler=mock_response_handler
     )
+
+
+@pytest.fixture()
+def mock_aioresponse():
+    with aioresponses() as m:
+        yield m

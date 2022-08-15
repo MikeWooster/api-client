@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from apiclient.response import RequestsResponse, Response
+from apiclient.response import AioHttpResponse, RequestsResponse, Response
 
 
 class TestResponse:
@@ -31,3 +31,10 @@ class TestRequestsResponse:
         requests_response = Mock(reason=None)
         response = RequestsResponse(requests_response)
         assert response.get_status_reason() == ""
+
+
+class TestAiRequestsResponse:
+    def test_get_url(self):
+        requests_response = Mock(url=1)
+        response = AioHttpResponse(requests_response, b"")
+        assert response.get_requested_url() == "1"
