@@ -11,9 +11,6 @@ from apiclient.utils.typing import OptionalDict
 
 LOG = logging.getLogger(__name__)
 
-# Timeout in seconds (float)
-DEFAULT_TIMEOUT = 10.0
-
 
 class APIClient:
     def __init__(
@@ -28,6 +25,7 @@ class APIClient:
         self._default_headers = {}
         self._default_query_params = {}
         self._default_username_password_authentication = None
+        self._default_timeout = 10.0
         # A session needs to live at this client level so that all
         # request strategies have access to the same session.
         self._session = None
@@ -105,7 +103,11 @@ class APIClient:
 
     def get_request_timeout(self) -> float:
         """Return the number of seconds before the request times out."""
-        return DEFAULT_TIMEOUT
+        return self._default_timeout
+
+    def set_request_timeout(self, timeout):
+        """Return the number of seconds before the request times out."""
+        self._default_timeout = timeout
 
     def clone(self):
         """Enable Prototype pattern on client."""

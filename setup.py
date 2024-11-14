@@ -3,7 +3,7 @@
 import setuptools
 
 # Pinning tenacity as the api has changed slightly which breaks all tests.
-application_dependencies = ["requests>=2.16", "tenacity>=5.1.0"]
+application_dependencies = ["requests>=2.31.0", "tenacity>=5.1.0"]
 prod_dependencies = []
 test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mock"]
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
@@ -21,7 +21,7 @@ with open("VERSION", "r") as buf:
 
 
 setuptools.setup(
-    name="api-client",
+    name="apiclient",
     version=version,
     description="Separate the high level client implementation from the underlying CRUD.",
     long_description=long_description,
@@ -30,10 +30,10 @@ setuptools.setup(
     author_email="",
     url="https://github.com/MikeWooster/api-client",
     python_requires=">=3.6",
-    packages=["apiclient"],
+    packages=["apiclient",'apiclient.utils'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
