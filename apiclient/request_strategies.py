@@ -55,23 +55,33 @@ class RequestStrategy(BaseRequestStrategy):
 
     def post(self, endpoint: str, data: JsonType, params: dict | None = None, **kwargs):
         """Send data and return response data from POST endpoint."""
-        return self._make_request(self.get_session().post, endpoint, data=data, params=params, **kwargs)
+        return self._decode_response_data(
+            self._make_request(self.get_session().post, endpoint, data=data, params=params, **kwargs)
+        )
 
     def get(self, endpoint: str, params: dict | None = None, **kwargs):
         """Return response data from GET endpoint."""
-        return self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
+        return self._decode_response_data(
+            self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
+        )
 
     def put(self, endpoint: str, data: JsonType, params: dict | None = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
-        return self._make_request(self.get_session().put, endpoint, data=data, params=params, **kwargs)
+        return self._decode_response_data(
+            self._make_request(self.get_session().put, endpoint, data=data, params=params, **kwargs)
+        )
 
     def patch(self, endpoint: str, data: JsonType, params: dict | None = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
-        return self._make_request(self.get_session().patch, endpoint, data=data, params=params, **kwargs)
+        return self._decode_response_data(
+            self._make_request(self.get_session().patch, endpoint, data=data, params=params, **kwargs)
+        )
 
     def delete(self, endpoint: str, params: dict | None = None, **kwargs):
         """Remove resource with DELETE endpoint."""
-        return self._make_request(self.get_session().delete, endpoint, params=params, **kwargs)
+        return self._decode_response_data(
+            self._make_request(self.get_session().delete, endpoint, params=params, **kwargs)
+        )
 
     def _make_request(
         self,
@@ -82,9 +92,10 @@ class RequestStrategy(BaseRequestStrategy):
         data: JsonType | None = None,
         **kwargs,
     ) -> Response:
-        """Make the request with the given method.
+        """Make the request with the given method and return the checked response.
 
-        Delegates response parsing to the response handler.
+        Decoding is left to the caller so that paginators retain access to the
+        underlying response (headers, links) via `Response.get_original()`.
         """
         try:
             response = RequestsResponse(
@@ -102,7 +113,7 @@ class RequestStrategy(BaseRequestStrategy):
             raise UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)
-        return self._decode_response_data(response)
+        return response
 
     def _get_request_params(self, params: dict | None) -> dict:
         """Return dictionary with any additional authentication query parameters."""
@@ -157,9 +168,11 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
         while run:
             this_page_params = deepcopy(params)
 
-            response = super().get(endpoint, params=this_page_params, **kwargs)
+            response = self._make_request(
+                self.get_session().get, endpoint, params=this_page_params, **kwargs
+            )
 
-            pages.append(response)
+            pages.append(self._decode_response_data(response))
             next_page_params = self.get_next_page_params(response, previous_page_params=this_page_params)
 
             if next_page_params:
@@ -183,9 +196,9 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
     def get(self, endpoint: str, params: dict | None = None, **kwargs):
         pages = []
         while endpoint:
-            response = super().get(endpoint, params=params, **kwargs)
+            response = self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
 
-            pages.append(response)
+            pages.append(self._decode_response_data(response))
 
             next_page_url = self.get_next_page_url(response, previous_page_url=endpoint)
             endpoint = next_page_url

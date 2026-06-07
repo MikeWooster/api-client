@@ -136,7 +136,11 @@ the pages are specified in the query parameters, or by modifying the url.
 
 Usage is simple in both cases; paginator decorators take a Callable with two required arguments:
 - `by_query_params` -> callable takes `response` and `previous_page_params`.
-- `by_url` -> callable takes `respones` and `previous_page_url`.
+- `by_url` -> callable takes `response` and `previous_page_url`.
+
+The `response` argument is a `Response` object. Use `response.get_json()` to read the decoded body,
+and `response.get_original()` to reach the underlying `requests.Response` (for example to read
+`headers` or `links`).
 
 The callable will need to return either the params in the case of `by_query_params`, or a new url in the
 case of `by_url`.
@@ -151,13 +155,13 @@ from apiclient.paginators import paginated
 def next_page_by_params(response, previous_page_params):
     # Function reads the response data and returns the query param
     # that tells the next request to go to.
-    return {"next": response["pages"]["next"]}
+    return {"next": response.get_json()["pages"]["next"]}
 
 
 def next_page_by_url(response, previous_page_url):
     # Function reads the response and returns the url as string
     # where the next page of data lives.
-    return response["pages"]["next"]["url"]
+    return response.get_json()["pages"]["next"]["url"]
 
 
 class MyClient(APIClient):
@@ -567,10 +571,11 @@ class Endpoint:
     todo = "todos/{id}"
 
 
-def get_next_page(response):
+def get_next_page(response, previous_page_params):
+    body = response.get_json()
     return {
-        "limit": response["limit"],
-        "offset": response["offset"] + response["limit"],
+        "limit": body["limit"],
+        "offset": body["offset"] + body["limit"],
     }
 
 
