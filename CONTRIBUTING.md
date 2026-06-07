@@ -22,9 +22,6 @@ make format    # apply isort and black fixes
 make check     # lint + test — run this before pushing
 ```
 
-CI runs `lint` and the test suite across every supported Python version on
-each pull request. A green `make check` locally means a green pipeline.
-
 ## Releasing
 
 Releases publish to [PyPI](https://pypi.org/project/api-client/) automatically
