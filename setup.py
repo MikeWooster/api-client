@@ -9,7 +9,7 @@ test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mo
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
 dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
-deploy_dependencies = ["requests", "twine"]
+deploy_dependencies = ["build", "requests", "twine"]
 
 
 with open("README.md", "r") as fh:

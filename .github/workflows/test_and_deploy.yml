@@ -41,7 +41,7 @@ jobs:
       - name: Set Up Build
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -52,7 +52,7 @@ jobs:
       - name: Build Dist
         run: |
           rm -rf dist/*
-          python setup.py sdist
+          python -m build
       - name: Publish
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
