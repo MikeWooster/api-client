@@ -28,25 +28,11 @@ each pull request. A green `make check` locally means a green pipeline.
 ## Releasing
 
 Releases publish to [PyPI](https://pypi.org/project/api-client/) automatically
-when a GitHub Release is published. Publishing uses
-[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) over OIDC,
-so no API tokens or passwords are stored.
+when a GitHub Release is published, using
+[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) over OIDC
+(no API tokens or passwords are stored).
 
-### One-time setup
-
-These must be configured once by a maintainer with admin access:
-
-1. Create a GitHub Environment named `pypi`
-   (repo Settings -> Environments).
-2. Register the repository as a trusted publisher on PyPI
-   (the `api-client` project -> Settings -> Publishing -> add a GitHub Actions
-   publisher) with:
-   - Owner: `MikeWooster`
-   - Repository: `api-client`
-   - Workflow: `test_and_deploy.yml`
-   - Environment: `pypi`
-
-### Cutting a release
+To release:
 
 1. Bump the version in the `VERSION` file in a pull request and merge it.
 2. Publish a GitHub Release whose tag is `v<VERSION>`
