@@ -30,7 +30,7 @@ setuptools.setup(
     author_email="",
     url="https://github.com/MikeWooster/api-client",
     python_requires=">=3.10",
-    packages=["apiclient"],
+    packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
     package_data={"apiclient": ["py.typed"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
