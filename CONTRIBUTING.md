@@ -26,8 +26,7 @@ make check     # lint + test — run this before pushing
 
 Releases publish to [PyPI](https://pypi.org/project/api-client/) automatically
 when a GitHub Release is published, using
-[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) over OIDC
-(no API tokens or passwords are stored).
+[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) over OIDC.
 
 To release:
 
