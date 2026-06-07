@@ -46,7 +46,8 @@ interactions:
     method: GET
     uri: http://testserver/users/2
   response:
-    body: null
+    body:
+      string: ''
     headers:
       Content-Type: [application/json; charset=utf-8]
     status: {code: 500, message: SERVER_ERROR}
@@ -125,7 +126,8 @@ interactions:
     method: DELETE
     uri: http://testserver/users/4
   response:
-    body: null
+    body:
+      string: ''
     headers:
       Content-Type: [application/json; charset=utf-8]
     status: {code: 200, message: OK}

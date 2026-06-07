@@ -1,8 +1,10 @@
 from unittest.mock import Mock, call, sentinel
 
 import pytest
+import requests
 
 from apiclient import APIClient
+from apiclient.exceptions import UnexpectedError
 from apiclient.request_strategies import (
     BaseRequestStrategy,
     QueryParamPaginatedRequestStrategy,
@@ -114,6 +116,39 @@ def test_request_strategy_patch_method_delegates_to_parent_handlers(mock_request
     assert response == sentinel.result
     assert_request_called_once(mock_requests, "mock://testserver.com", "PATCH")
     assert_mock_client_called_once(mock_client, {"data": sentinel.data})
+
+
+def test_request_strategy_post_method_accepts_a_list_body(mock_requests, mock_client):
+    mock_requests.post("mock://testserver.com", json={"active": True}, status_code=200)
+
+    strategy = RequestStrategy()
+    strategy.set_client(mock_client.client)
+
+    response = strategy.post("mock://testserver.com", data=[{"id": sentinel.data}])
+
+    assert response == sentinel.result
+    assert_request_called_once(mock_requests, "mock://testserver.com", "POST")
+    assert_mock_client_called_once(mock_client, [{"id": sentinel.data}])
+
+
+def test_request_strategy_wraps_request_errors_as_unexpected_error(mock_requests, mock_client):
+    mock_requests.get("mock://testserver.com", exc=requests.exceptions.ConnectTimeout)
+
+    strategy = RequestStrategy()
+    strategy.set_client(mock_client.client)
+
+    with pytest.raises(UnexpectedError):
+        strategy.get("mock://testserver.com")
+
+
+def test_request_strategy_does_not_wrap_non_request_errors(mock_requests, mock_client):
+    mock_requests.get("mock://testserver.com", exc=ValueError("not a request error"))
+
+    strategy = RequestStrategy()
+    strategy.set_client(mock_client.client)
+
+    with pytest.raises(ValueError):
+        strategy.get("mock://testserver.com")
 
 
 def test_request_strategy_delete_method_delegates_to_parent_handlers(mock_requests, mock_client):

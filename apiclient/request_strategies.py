@@ -5,7 +5,7 @@ import requests
 
 from apiclient.exceptions import UnexpectedError
 from apiclient.response import RequestsResponse, Response
-from apiclient.utils.typing import OptionalDict
+from apiclient.utils.typing import JsonType, OptionalDict, OptionalJsonType
 
 if TYPE_CHECKING:  # pragma: no cover
     # Stupid way of getting around cyclic imports when
@@ -51,7 +51,7 @@ class RequestStrategy(BaseRequestStrategy):
     def set_session(self, session: requests.Session):
         self.get_client().set_session(session)
 
-    def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+    def post(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
         return self._make_request(self.get_session().post, endpoint, data=data, params=params, **kwargs)
 
@@ -59,11 +59,11 @@ class RequestStrategy(BaseRequestStrategy):
         """Return response data from GET endpoint."""
         return self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
 
-    def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+    def put(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
         return self._make_request(self.get_session().put, endpoint, data=data, params=params, **kwargs)
 
-    def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+    def patch(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
         return self._make_request(self.get_session().patch, endpoint, data=data, params=params, **kwargs)
 
@@ -77,7 +77,7 @@ class RequestStrategy(BaseRequestStrategy):
         endpoint: str,
         params: OptionalDict = None,
         headers: OptionalDict = None,
-        data: OptionalDict = None,
+        data: OptionalJsonType = None,
         **kwargs,
     ) -> Response:
         """Make the request with the given method.
@@ -96,7 +96,7 @@ class RequestStrategy(BaseRequestStrategy):
                     **kwargs,
                 )
             )
-        except Exception as error:
+        except requests.RequestException as error:
             raise UnexpectedError(f"Error when contacting '{endpoint}'") from error
         else:
             self._check_response(response)
