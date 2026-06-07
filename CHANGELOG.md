@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for Python 3.10 through 3.14.
+- A `py.typed` marker so type checkers use the bundled inline type hints (#77).
 - A wheel is now published alongside the source distribution.
 
 ### Changed
