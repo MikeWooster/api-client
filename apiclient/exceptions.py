@@ -1,6 +1,3 @@
-from apiclient.utils.typing import OptionalInt
-
-
 class APIClientError(Exception):
     """General exception to denote that something went wrong when using the client.
 
@@ -19,10 +16,10 @@ class APIRequestError(APIClientError):
     """Exception to denote that something went wrong when making the request."""
 
     message: str = ""
-    status_code: OptionalInt = None
+    status_code: int | None = None
     info: str = ""
 
-    def __init__(self, message: str = "", status_code: OptionalInt = None, info: str = ""):
+    def __init__(self, message: str = "", status_code: int | None = None, info: str = ""):
         self.message = self.message or message
         self.status_code = self.status_code or status_code
         self.info = self.info or info

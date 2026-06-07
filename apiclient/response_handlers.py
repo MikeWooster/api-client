@@ -1,5 +1,4 @@
 from json import JSONDecodeError
-from typing import Optional
 from xml.etree import ElementTree
 
 import requests
@@ -29,7 +28,7 @@ class JsonResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response data as json."""
 
     @staticmethod
-    def get_request_data(response: Response) -> Optional[JsonType]:
+    def get_request_data(response: Response) -> JsonType | None:
         if response.get_raw_data() == "":
             return None
 
@@ -46,7 +45,7 @@ class XmlResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response to an xml Element."""
 
     @staticmethod
-    def get_request_data(response: Response) -> Optional[XmlType]:
+    def get_request_data(response: Response) -> XmlType | None:
         if response.get_raw_data() == "":
             return None
 

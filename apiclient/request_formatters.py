@@ -1,6 +1,6 @@
 import json
 
-from apiclient.utils.typing import OptionalJsonType, OptionalStr
+from apiclient.utils.typing import JsonType
 
 
 class BaseRequestFormatter:
@@ -16,7 +16,7 @@ class BaseRequestFormatter:
             return {}
 
     @classmethod
-    def format(cls, data: OptionalJsonType):
+    def format(cls, data: JsonType | None):
         raise NotImplementedError
 
 
@@ -24,7 +24,7 @@ class NoOpRequestFormatter(BaseRequestFormatter):
     """No action request formatter."""
 
     @classmethod
-    def format(cls, data: OptionalJsonType) -> OptionalJsonType:
+    def format(cls, data: JsonType | None) -> JsonType | None:
         return data
 
 
@@ -34,6 +34,6 @@ class JsonRequestFormatter(BaseRequestFormatter):
     content_type = "application/json"
 
     @classmethod
-    def format(cls, data: OptionalJsonType) -> OptionalStr:
+    def format(cls, data: JsonType | None) -> str | None:
         if data:
             return json.dumps(data)

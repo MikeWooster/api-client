@@ -1,5 +1,4 @@
 import random
-from typing import List
 
 import tenacity
 
@@ -18,7 +17,7 @@ class retry_if_api_request_error(tenacity.retry_if_exception):
     * status codes >= 500 codes will be retried.
     """
 
-    def __init__(self, status_codes: List[int] = None):
+    def __init__(self, status_codes: list[int] | None = None):
         self._status_codes = status_codes
         super().__init__(self._retry_if)
 

@@ -1,7 +1,7 @@
 import http.cookiejar
-from typing import TYPE_CHECKING, Dict, Optional, Union
+from typing import TYPE_CHECKING
 
-from apiclient.utils.typing import BasicAuthType, OptionalStr
+from apiclient.utils.typing import BasicAuthType
 
 if TYPE_CHECKING:  # pragma: no cover
     # Stupid way of getting around cyclic imports when
@@ -16,7 +16,7 @@ class BaseAuthenticationMethod:
     def get_query_params(self) -> dict:
         return {}
 
-    def get_username_password_authentication(self) -> Optional[BasicAuthType]:
+    def get_username_password_authentication(self) -> BasicAuthType | None:
         return None
 
     def perform_initial_auth(self, client: "APIClient"):
@@ -51,15 +51,15 @@ class HeaderAuthentication(BaseAuthenticationMethod):
         self,
         token: str,
         parameter: str = "Authorization",
-        scheme: OptionalStr = "Bearer",
-        extra: Optional[Dict[str, str]] = None,
+        scheme: str | None = "Bearer",
+        extra: dict[str, str] | None = None,
     ):
         self._token = token
         self._parameter = parameter
         self._scheme = scheme
         self._extra = extra
 
-    def get_headers(self) -> Dict[str, str]:
+    def get_headers(self) -> dict[str, str]:
         if self._scheme:
             headers = {self._parameter: f"{self._scheme} {self._token}"}
         else:
@@ -86,7 +86,7 @@ class CookieAuthentication(BaseAuthenticationMethod):
     def __init__(
         self,
         auth_url: str,
-        authentication: Union[HeaderAuthentication, QueryParameterAuthentication, BasicAuthentication],
+        authentication: HeaderAuthentication | QueryParameterAuthentication | BasicAuthentication,
     ):
         self._auth_url = auth_url
         self._authentication = authentication

@@ -5,7 +5,7 @@ import requests
 
 from apiclient.exceptions import UnexpectedError
 from apiclient.response import RequestsResponse, Response
-from apiclient.utils.typing import JsonType, OptionalDict, OptionalJsonType
+from apiclient.utils.typing import JsonType
 
 if TYPE_CHECKING:  # pragma: no cover
     # Stupid way of getting around cyclic imports when
@@ -51,23 +51,23 @@ class RequestStrategy(BaseRequestStrategy):
     def set_session(self, session: requests.Session):
         self.get_client().set_session(session)
 
-    def post(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
+    def post(self, endpoint: str, data: JsonType, params: dict | None = None, **kwargs):
         """Send data and return response data from POST endpoint."""
         return self._make_request(self.get_session().post, endpoint, data=data, params=params, **kwargs)
 
-    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
+    def get(self, endpoint: str, params: dict | None = None, **kwargs):
         """Return response data from GET endpoint."""
         return self._make_request(self.get_session().get, endpoint, params=params, **kwargs)
 
-    def put(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
+    def put(self, endpoint: str, data: JsonType, params: dict | None = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
         return self._make_request(self.get_session().put, endpoint, data=data, params=params, **kwargs)
 
-    def patch(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
+    def patch(self, endpoint: str, data: JsonType, params: dict | None = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
         return self._make_request(self.get_session().patch, endpoint, data=data, params=params, **kwargs)
 
-    def delete(self, endpoint: str, params: OptionalDict = None, **kwargs):
+    def delete(self, endpoint: str, params: dict | None = None, **kwargs):
         """Remove resource with DELETE endpoint."""
         return self._make_request(self.get_session().delete, endpoint, params=params, **kwargs)
 
@@ -75,9 +75,9 @@ class RequestStrategy(BaseRequestStrategy):
         self,
         request_method: Callable,
         endpoint: str,
-        params: OptionalDict = None,
-        headers: OptionalDict = None,
-        data: OptionalJsonType = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: JsonType | None = None,
         **kwargs,
     ) -> Response:
         """Make the request with the given method.
@@ -102,14 +102,14 @@ class RequestStrategy(BaseRequestStrategy):
             self._check_response(response)
         return self._decode_response_data(response)
 
-    def _get_request_params(self, params: OptionalDict) -> dict:
+    def _get_request_params(self, params: dict | None) -> dict:
         """Return dictionary with any additional authentication query parameters."""
         if params is None:
             params = {}
         params.update(self.get_client().get_default_query_params())
         return params
 
-    def _get_request_headers(self, headers: OptionalDict) -> dict:
+    def _get_request_headers(self, headers: dict | None) -> dict:
         """Return dictionary with any additional authentication headers."""
         if headers is None:
             headers = {}
@@ -119,7 +119,7 @@ class RequestStrategy(BaseRequestStrategy):
     def _get_username_password_authentication(self):
         return self.get_client().get_default_username_password_authentication()
 
-    def _get_formatted_data(self, data: OptionalDict):
+    def _get_formatted_data(self, data: JsonType | None):
         return self.get_client().get_request_formatter().format(data)
 
     def _get_request_timeout(self) -> float:
@@ -146,7 +146,7 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
     def __init__(self, next_page: Callable):
         self._next_page = next_page
 
-    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
+    def get(self, endpoint: str, params: dict | None = None, **kwargs):
         if params is None:
             params = {}
 
@@ -168,7 +168,7 @@ class QueryParamPaginatedRequestStrategy(RequestStrategy):
 
         return pages
 
-    def get_next_page_params(self, response, previous_page_params: dict) -> OptionalDict:
+    def get_next_page_params(self, response, previous_page_params: dict) -> dict | None:
         return self._next_page(response, previous_page_params)
 
 
@@ -178,7 +178,7 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
     def __init__(self, next_page: Callable):
         self._next_page = next_page
 
-    def get(self, endpoint: str, params: OptionalDict = None, **kwargs):
+    def get(self, endpoint: str, params: dict | None = None, **kwargs):
         pages = []
         while endpoint:
             response = super().get(endpoint, params=params, **kwargs)
@@ -190,5 +190,5 @@ class UrlPaginatedRequestStrategy(RequestStrategy):
 
         return pages
 
-    def get_next_page_url(self, response, previous_page_url: str) -> OptionalDict:
+    def get_next_page_url(self, response, previous_page_url: str) -> dict | None:
         return self._next_page(response, previous_page_url)
