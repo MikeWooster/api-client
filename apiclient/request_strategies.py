@@ -37,6 +37,14 @@ class BaseRequestStrategy:
     def delete(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError
 
+    def _handle_request_error(self, error: Exception, endpoint: str) -> None:
+        """Translate a transport-level error into a client exception.
+
+        Override to add custom handling (e.g. retries on rate limits) without
+        reimplementing the request flow.
+        """
+        raise UnexpectedError(f"Error when contacting '{endpoint}'") from error
+
 
 class RequestStrategy(BaseRequestStrategy):
     """Requests strategy that uses the `requests` lib with a `requests.session`."""
@@ -99,7 +107,7 @@ class RequestStrategy(BaseRequestStrategy):
                 )
             )
         except requests.RequestException as error:
-            raise UnexpectedError(f"Error when contacting '{endpoint}'") from error
+            self._handle_request_error(error, endpoint)
         else:
             self._check_response(response)
         return self._decode_response_data(response)

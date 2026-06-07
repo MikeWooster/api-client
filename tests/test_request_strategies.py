@@ -151,6 +151,23 @@ def test_request_strategy_does_not_wrap_non_request_errors(mock_requests, mock_c
         strategy.get("mock://testserver.com")
 
 
+def test_request_strategy_uses_overridden_request_error_handler(mock_requests, mock_client):
+    mock_requests.get("mock://testserver.com", exc=requests.exceptions.ConnectTimeout)
+
+    class CustomError(Exception):
+        pass
+
+    class CustomStrategy(RequestStrategy):
+        def _handle_request_error(self, error, endpoint):
+            raise CustomError(endpoint) from error
+
+    strategy = CustomStrategy()
+    strategy.set_client(mock_client.client)
+
+    with pytest.raises(CustomError):
+        strategy.get("mock://testserver.com")
+
+
 def test_request_strategy_delete_method_delegates_to_parent_handlers(mock_requests, mock_client):
     mock_requests.delete("mock://testserver.com", json={"active": True}, status_code=200)
 
