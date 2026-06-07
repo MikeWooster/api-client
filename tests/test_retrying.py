@@ -3,7 +3,6 @@ from fractions import Fraction
 from unittest.mock import sentinel
 
 import pytest
-import six
 import tenacity
 
 from apiclient import retry_request
@@ -25,7 +24,7 @@ _unset = object()
 
 def _make_unset_exception(func_name, **kwargs):
     missing = []
-    for k, v in six.iteritems(kwargs):
+    for k, v in kwargs.items():
         if v is _unset:
             missing.append(k)
     missing_str = ", ".join(repr(s) for s in missing)
@@ -79,7 +78,7 @@ class RunnableCounter:
 
 
 @contextmanager
-def testing_retries(max_attempts=None, wait=None):
+def retrying_context(max_attempts=None, wait=None):
     """Context manager to create a retry decorated function.
 
     If provided, wait and stop will be overridden for testing purposes.
@@ -99,7 +98,7 @@ def testing_retries(max_attempts=None, wait=None):
 
 
 @contextmanager
-def testing_retry_for_status_code(status_codes=None):
+def retrying_for_status_code_context(status_codes=None):
     """Context manager to create a retry decorated function to test status codes."""
 
     @tenacity.retry(
@@ -131,7 +130,7 @@ def testing_retry_for_status_code(status_codes=None):
 def test_exponential_retry_backoff(retry_state, max_wait):
     # Expecting exponential backoff with a max delay of 30s and min delay of 0.25s
     min_wait = max_wait * 0.75
-    with testing_retries() as func:
+    with retrying_context() as func:
         assert min_wait <= func.retry.wait(retry_state) <= max_wait
 
 
@@ -140,7 +139,7 @@ def test_exponential_retry_backoff_not_greater_than_30s(previous_attempt_number)
     retry_state = make_retry_state(
         previous_attempt_number=previous_attempt_number, delay_since_first_attempt=0
     )
-    with testing_retries() as func:
+    with retrying_context() as func:
         # Expecting the wait to be somewhere between 22.5 (30*.75) and 30
         assert 22.5 <= func.retry.wait(retry_state) <= 30
 
@@ -153,7 +152,7 @@ def test_maximum_attempt_time_exceeded(delay_since_first_attempt, stop):
     retry_state = make_retry_state(
         previous_attempt_number=0, delay_since_first_attempt=delay_since_first_attempt
     )
-    with testing_retries() as func:
+    with retrying_context() as func:
         assert func.retry.stop(retry_state) is stop
 
 
@@ -162,7 +161,7 @@ def test_maximum_attempt_time_exceeded(delay_since_first_attempt, stop):
 )
 def test_reraises_if_always_api_request_error(exception_class):
     callable = RunnableCounter(exception_class("Something went wrong."))
-    with testing_retries(max_attempts=5, wait=0) as func:
+    with retrying_context(max_attempts=5, wait=0) as func:
         with pytest.raises(exception_class):
             func(callable)
     assert callable.call_count == 5
@@ -171,7 +170,7 @@ def test_reraises_if_always_api_request_error(exception_class):
 def test_stops_after_successful_retry():
     side_effects = (APIRequestError("Something went wrong."), sentinel.result)
     callable = RunnableCounter(side_effects)
-    with testing_retries(max_attempts=5, wait=0) as func:
+    with retrying_context(max_attempts=5, wait=0) as func:
         result = func(callable)
     assert callable.call_count == 2
     assert result == sentinel.result
@@ -179,7 +178,7 @@ def test_stops_after_successful_retry():
 
 def test_does_not_retry_if_successful_on_first_attempt():
     callable = RunnableCounter(sentinel.result)
-    with testing_retries(max_attempts=5, wait=0) as func:
+    with retrying_context(max_attempts=5, wait=0) as func:
         result = func(callable)
     assert callable.call_count == 1
     assert result == sentinel.result
@@ -187,7 +186,7 @@ def test_does_not_retry_if_successful_on_first_attempt():
 
 def test_does_not_retry_when_not_api_request_error():
     callable = RunnableCounter(ValueError("Not an APIRequestError."))
-    with testing_retries(max_attempts=5, wait=0) as func:
+    with retrying_context(max_attempts=5, wait=0) as func:
         with pytest.raises(ValueError):
             func(callable)
     assert callable.call_count == 1
@@ -197,7 +196,7 @@ def test_does_not_retry_when_not_api_request_error():
 def test_retries_for_status_codes_over_5xx(status_code):
     side_effects = (APIRequestError("Something went wrong.", status_code), sentinel.result)
     callable = RunnableCounter(side_effects)
-    with testing_retries(max_attempts=5, wait=0) as func:
+    with retrying_context(max_attempts=5, wait=0) as func:
         result = func(callable)
     assert callable.call_count == 2
     assert result == sentinel.result
@@ -207,7 +206,7 @@ def test_retries_for_status_codes_over_5xx(status_code):
 def test_does_not_retry_for_status_codes_under_5xx(status_code):
     side_effects = (APIRequestError("Something went wrong.", status_code), sentinel.result)
     callable = RunnableCounter(side_effects)
-    with testing_retries(max_attempts=5, wait=0) as func:
+    with retrying_context(max_attempts=5, wait=0) as func:
         with pytest.raises(APIRequestError):
             func(callable)
     assert callable.call_count == 1
@@ -217,7 +216,7 @@ def test_does_not_retry_for_status_codes_under_5xx(status_code):
 def test_retry_on_status_codes(status_code):
     side_effects = APIRequestError("Something went wrong.", status_code)
     callable = RunnableCounter(side_effects)
-    with testing_retry_for_status_code(status_codes=[status_code]) as func:
+    with retrying_for_status_code_context(status_codes=[status_code]) as func:
         with pytest.raises(APIRequestError):
             func(callable)
     assert callable.call_count == 2
