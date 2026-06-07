@@ -44,3 +44,12 @@ jobs:
       - name: Unit Tests
         run: |
           pytest
+  ci-ok:
+    name: CI OK
+    needs: [lint, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify lint and all test jobs passed
+        run: |
+          [ "${{ needs.lint.result }}" = "success" ] && [ "${{ needs.test.result }}" = "success" ]
