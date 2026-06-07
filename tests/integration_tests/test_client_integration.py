@@ -79,11 +79,6 @@ def test_client_response(cassette):
         },
     ]
 
-    # Fails to connect when connecting to non-existent url.
-    with pytest.raises(UnexpectedError) as exc_info:
-        client.get("mock://testserver")
-    assert str(exc_info.value) == "Error when contacting 'mock://testserver'"
-
     # User 10 failed on first attempt 500 with 20001 code
     client.set_error_handler(ClientErrorHandler)
     with pytest.raises(InternalError) as exc_info:

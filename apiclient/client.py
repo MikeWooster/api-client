@@ -7,7 +7,7 @@ from apiclient.error_handlers import BaseErrorHandler, ErrorHandler
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
-from apiclient.utils.typing import OptionalDict
+from apiclient.utils.typing import JsonType, OptionalDict
 
 LOG = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class APIClient:
         """Enable Prototype pattern on client."""
         return copy(self)
 
-    def post(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+    def post(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
         """Send data and return response data from POST endpoint."""
         LOG.debug("POST %s with %s", endpoint, data)
         return self.get_request_strategy().post(endpoint, data=data, params=params, **kwargs)
@@ -121,12 +121,12 @@ class APIClient:
         LOG.debug("GET %s", endpoint)
         return self.get_request_strategy().get(endpoint, params=params, **kwargs)
 
-    def put(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+    def put(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
         """Send data to overwrite resource and return response data from PUT endpoint."""
         LOG.debug("PUT %s with %s", endpoint, data)
         return self.get_request_strategy().put(endpoint, data=data, params=params, **kwargs)
 
-    def patch(self, endpoint: str, data: dict, params: OptionalDict = None, **kwargs):
+    def patch(self, endpoint: str, data: JsonType, params: OptionalDict = None, **kwargs):
         """Send data to update resource and return response data from PATCH endpoint."""
         LOG.debug("PATCH %s with %s", endpoint, data)
         return self.get_request_strategy().patch(endpoint, data=data, params=params, **kwargs)
