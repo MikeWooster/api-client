@@ -2,59 +2,54 @@ name: Unit Tests
 
 on:
   push:
+    branches: [master]
   pull_request:
-  schedule:
-    - cron: '0 0 * * *'
 
 jobs:
-  depcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python Version
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox
-          pip install -e .
-      - name: Dependency Checks
-        run: |
-          python ./scripts/dep_checker.py
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python Version
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.8
+          python-version: "3.14"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install tox
+          pip install -e .[lint]
       - name: Lint
         run: |
-          tox -e lint
+          isort apiclient tests --check-only
+          black --check apiclient tests
+          flake8 apiclient tests
   test:
-    needs: [depcheck, lint]
+    needs: [lint]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [ 3.6, 3.7, 3.8 ]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install tox
+          pip install -e .[test]
       - name: Unit Tests
         run: |
-          tox
+          pytest
+  ci-ok:
+    name: CI OK
+    needs: [lint, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify lint and all test jobs passed
+        run: |
+          [ "${{ needs.lint.result }}" = "success" ] && [ "${{ needs.test.result }}" = "success" ]

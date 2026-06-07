@@ -9,7 +9,7 @@ test_dependencies = ["pytest", "pytest-env", "pytest-cov", "vcrpy", "requests-mo
 lint_dependencies = ["flake8", "flake8-docstrings", "black", "isort"]
 docs_dependencies = []
 dev_dependencies = test_dependencies + lint_dependencies + docs_dependencies + ["ipdb"]
-deploy_dependencies = ["requests", "twine"]
+deploy_dependencies = ["build", "requests", "twine"]
 
 
 with open("README.md", "r") as fh:
@@ -29,11 +29,16 @@ setuptools.setup(
     author="Mike Wooster",
     author_email="",
     url="https://github.com/MikeWooster/api-client",
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     packages=["apiclient"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",

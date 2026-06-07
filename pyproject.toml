@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.black]
 line-length=109
-py36=true
+target-version=['py39', 'py310', 'py311', 'py312', 'py313', 'py314']
