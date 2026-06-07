@@ -8,8 +8,9 @@ from apiclient.response import Response
 
 
 def by_query_params_callable(response, prev_params):
-    if "nextPage" in response and response["nextPage"]:
-        return {"page": response["nextPage"]}
+    body = response.get_json()
+    if "nextPage" in body and body["nextPage"]:
+        return {"page": body["nextPage"]}
 
 
 class InternalError(APIRequestError):

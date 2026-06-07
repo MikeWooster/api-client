@@ -10,13 +10,15 @@ from tests.helpers import client_factory
 
 
 def next_page_param(response, previous_page_params):
-    if response["next"]:
-        return {"page": response["next"]}
+    body = response.get_json()
+    if body["next"]:
+        return {"page": body["next"]}
 
 
 def next_page_url(response, previous_page_url):
-    if response["next"]:
-        return response["next"]
+    body = response.get_json()
+    if body["next"]:
+        return body["next"]
 
 
 class QueryPaginatedClient(APIClient):

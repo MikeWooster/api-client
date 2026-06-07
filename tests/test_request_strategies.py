@@ -178,7 +178,8 @@ def test_query_param_paginated_strategy_delegates_to_callable(initial_params, mo
     )
 
     def next_page_callback(response, previous_params):
-        return {"nextPage": response["nextPage"]} if response["nextPage"] else None
+        body = response.get_json()
+        return {"nextPage": body["nextPage"]} if body["nextPage"] else None
 
     strategy = request_strategy_factory(QueryParamPaginatedRequestStrategy, next_page=next_page_callback)
 
@@ -211,7 +212,7 @@ def test_url_paginated_strategy_delegates_to_callable(mock_requests):
     )
 
     def next_page_callback(response, previous_params):
-        return response["nextPage"]
+        return response.get_json()["nextPage"]
 
     strategy = request_strategy_factory(UrlPaginatedRequestStrategy, next_page=next_page_callback)
 
@@ -229,6 +230,32 @@ def test_url_paginated_strategy_delegates_to_callable(mock_requests):
     history = mock_requests.request_history
     assert history[0].url == "mock://testserver.com"
     assert history[1].url == "mock://testserver.com/2"
+
+
+def test_url_paginated_strategy_callback_can_read_response_headers(mock_requests):
+    # Given pages are linked via the Link header rather than the body (issue #86)
+    mock_requests.get(
+        "mock://testserver.com",
+        json={"data": ["element1", "element2"]},
+        status_code=200,
+        headers={"Link": '<mock://testserver.com/2>; rel="next"'},
+    )
+    mock_requests.get("mock://testserver.com/2", json={"data": ["element3", "element4"]}, status_code=200)
+
+    def next_page_callback(response, previous_url):
+        next_link = response.get_original().links.get("next")
+        return next_link["url"] if next_link else None
+
+    strategy = request_strategy_factory(UrlPaginatedRequestStrategy, next_page=next_page_callback)
+
+    # When we request the page, the callback follows the Link header to the next page
+    response = strategy.get("mock://testserver.com")
+
+    assert list(response) == [
+        {"data": ["element1", "element2"]},
+        {"data": ["element3", "element4"]},
+    ]
+    assert mock_requests.call_count == 2
 
 
 def test_mock_strategy():
