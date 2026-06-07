@@ -1,13 +1,18 @@
+from __future__ import annotations
 import logging
 from copy import copy
-from typing import Any
+from typing import TYPE_CHECKING
 
 from apiclient.authentication_methods import BaseAuthenticationMethod, NoAuthentication
 from apiclient.error_handlers import BaseErrorHandler, ErrorHandler
 from apiclient.request_formatters import BaseRequestFormatter, NoOpRequestFormatter
 from apiclient.request_strategies import BaseRequestStrategy, RequestStrategy
 from apiclient.response_handlers import BaseResponseHandler, RequestsResponseHandler
-from apiclient.utils.typing import JsonType
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Any
+
+    from apiclient.utils.typing import JsonType
 
 LOG = logging.getLogger(__name__)
 

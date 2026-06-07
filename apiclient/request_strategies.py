@@ -1,16 +1,18 @@
+from __future__ import annotations
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import requests
 
 from apiclient.exceptions import UnexpectedError
-from apiclient.response import RequestsResponse, Response
-from apiclient.utils.typing import JsonType
+from apiclient.response import RequestsResponse
 
 if TYPE_CHECKING:  # pragma: no cover
-    # Stupid way of getting around cyclic imports when
-    # using typehinting.
+    from typing import Callable
+
     from apiclient import APIClient
+    from apiclient.response import Response
+    from apiclient.utils.typing import JsonType
 
 
 class BaseRequestStrategy:

@@ -1,12 +1,10 @@
+from __future__ import annotations
 import http.cookiejar
 from typing import TYPE_CHECKING
 
-from apiclient.utils.typing import BasicAuthType
-
 if TYPE_CHECKING:  # pragma: no cover
-    # Stupid way of getting around cyclic imports when
-    # using typehinting.
     from apiclient import APIClient
+    from apiclient.utils.typing import BasicAuthType
 
 
 class BaseAuthenticationMethod:

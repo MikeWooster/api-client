@@ -1,11 +1,15 @@
+from __future__ import annotations
 from json import JSONDecodeError
+from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 
-import requests
-
 from apiclient.exceptions import ResponseParseError
-from apiclient.response import Response
-from apiclient.utils.typing import JsonType, XmlType
+
+if TYPE_CHECKING:  # pragma: no cover
+    import requests
+
+    from apiclient.response import Response
+    from apiclient.utils.typing import JsonType, XmlType
 
 
 class BaseResponseHandler:

@@ -1,13 +1,15 @@
+from __future__ import annotations
 from contextlib import contextmanager
 from functools import wraps
-from typing import Callable
+from typing import TYPE_CHECKING
 
-from apiclient.client import APIClient
-from apiclient.request_strategies import (
-    BaseRequestStrategy,
-    QueryParamPaginatedRequestStrategy,
-    UrlPaginatedRequestStrategy,
-)
+from apiclient.request_strategies import QueryParamPaginatedRequestStrategy, UrlPaginatedRequestStrategy
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Callable
+
+    from apiclient.client import APIClient
+    from apiclient.request_strategies import BaseRequestStrategy
 
 
 @contextmanager
@@ -21,7 +23,7 @@ def set_strategy(client: APIClient, strategy: BaseRequestStrategy):
         del temporary_client
 
 
-def paginated(by_query_params: Callable = None, by_url: Callable = None):
+def paginated(by_query_params: Callable | None = None, by_url: Callable | None = None):
     """Decorator to signal that the page is paginated."""
     if by_query_params:
         strategy = QueryParamPaginatedRequestStrategy(by_query_params)

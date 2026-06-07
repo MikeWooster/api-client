@@ -1,6 +1,9 @@
+from __future__ import annotations
 import json
+from typing import TYPE_CHECKING
 
-from apiclient.utils.typing import JsonType
+if TYPE_CHECKING:  # pragma: no cover
+    from apiclient.utils.typing import JsonType
 
 
 class BaseRequestFormatter:
