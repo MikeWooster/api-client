@@ -13,10 +13,10 @@ pip install -e '.[dev]'
 
 ## Tests and linting
 
-A `Makefile` wraps the same commands CI runs:
+Available Makefile commands:
 
 ```bash
-make test      # run the test suite (with the 100% coverage gate)
+make test      # run the test suite
 make lint      # check formatting and style (isort, black, flake8)
 make format    # apply isort and black fixes
 make check     # lint + test — run this before pushing
@@ -26,7 +26,7 @@ make check     # lint + test — run this before pushing
 
 Releases publish to [PyPI](https://pypi.org/project/api-client/) automatically
 when a GitHub Release is published, using
-[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) over OIDC.
+[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/).
 
 To release:
 
