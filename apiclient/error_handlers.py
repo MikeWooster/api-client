@@ -1,5 +1,10 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from apiclient import exceptions
-from apiclient.response import Response
+
+if TYPE_CHECKING:  # pragma: no cover
+    from apiclient.response import Response
 
 
 class BaseErrorHandler:

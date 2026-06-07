@@ -1,8 +1,12 @@
-from typing import Any
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-import requests
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Any
 
-from apiclient.utils.typing import JsonType
+    import requests
+
+    from apiclient.utils.typing import JsonType
 
 
 class Response:

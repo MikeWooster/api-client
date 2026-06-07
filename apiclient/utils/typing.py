@@ -1,13 +1,8 @@
-from typing import Optional, Tuple, Union
 from xml.etree import ElementTree
 
 from requests import Response
 
-OptionalDict = Optional[dict]
-OptionalStr = Optional[str]
-OptionalInt = Optional[int]
-BasicAuthType = Tuple[str, str]
-JsonType = Union[str, list, dict]
-OptionalJsonType = Optional[JsonType]
+BasicAuthType = tuple[str, str]
+JsonType = str | list | dict
 XmlType = ElementTree.Element
-ResponseType = Union[JsonType, XmlType, Response]
+ResponseType = JsonType | XmlType | Response

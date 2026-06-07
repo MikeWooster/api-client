@@ -2,7 +2,7 @@
 
 ## Development setup
 
-The library supports Python 3.9 to 3.14. Create a virtual environment and
+The library supports Python 3.10 to 3.14. Create a virtual environment and
 install the package with its development dependencies:
 
 ```bash

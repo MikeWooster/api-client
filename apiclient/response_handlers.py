@@ -1,12 +1,15 @@
+from __future__ import annotations
 from json import JSONDecodeError
-from typing import Optional
+from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 
-import requests
-
 from apiclient.exceptions import ResponseParseError
-from apiclient.response import Response
-from apiclient.utils.typing import JsonType, XmlType
+
+if TYPE_CHECKING:  # pragma: no cover
+    import requests
+
+    from apiclient.response import Response
+    from apiclient.utils.typing import JsonType, XmlType
 
 
 class BaseResponseHandler:
@@ -29,7 +32,7 @@ class JsonResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response data as json."""
 
     @staticmethod
-    def get_request_data(response: Response) -> Optional[JsonType]:
+    def get_request_data(response: Response) -> JsonType | None:
         if response.get_raw_data() == "":
             return None
 
@@ -46,7 +49,7 @@ class XmlResponseHandler(BaseResponseHandler):
     """Attempt to return the decoded response to an xml Element."""
 
     @staticmethod
-    def get_request_data(response: Response) -> Optional[XmlType]:
+    def get_request_data(response: Response) -> XmlType | None:
         if response.get_raw_data() == "":
             return None
 
