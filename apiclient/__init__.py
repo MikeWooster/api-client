@@ -3,6 +3,7 @@ from apiclient.authentication_methods import (
     BasicAuthentication,
     HeaderAuthentication,
     NoAuthentication,
+    OAuthAuthentication,
     QueryParameterAuthentication,
 )
 from apiclient.client import APIClient

@@ -1,6 +1,9 @@
 from __future__ import annotations
 import http.cookiejar
+import time
 from typing import TYPE_CHECKING
+
+import requests
 
 if TYPE_CHECKING:  # pragma: no cover
     from apiclient import APIClient
@@ -76,6 +79,60 @@ class BasicAuthentication(BaseAuthenticationMethod):
 
     def get_username_password_authentication(self) -> BasicAuthType:
         return (self._username, self._password)
+
+
+class OAuthAuthentication(BaseAuthenticationMethod):
+    """OAuth2 client-credentials authentication.
+
+    Exchanges a client id and secret for a bearer token at the token endpoint
+    and sends it as an authorization header, fetching a fresh token when the
+    current one is missing or within `expiry_margin` seconds of expiring.
+    """
+
+    def __init__(
+        self,
+        token_url: str,
+        client_id: str,
+        client_secret: str,
+        scope: str | None = None,
+        expiry_margin: int = 10,
+        parameter: str = "Authorization",
+        scheme: str | None = "Bearer",
+    ):
+        self._token_url = token_url
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._scope = scope
+        self._expiry_margin = expiry_margin
+        self._parameter = parameter
+        self._scheme = scheme
+        self._access_token: str | None = None
+        self._expires_at = 0.0
+
+    def get_headers(self) -> dict[str, str]:
+        token = self._get_valid_token()
+        if self._scheme:
+            return {self._parameter: f"{self._scheme} {token}"}
+        return {self._parameter: token}
+
+    def _get_valid_token(self) -> str:
+        if self._access_token is None or time.monotonic() >= self._expires_at - self._expiry_margin:
+            self._fetch_token()
+        return self._access_token
+
+    def _fetch_token(self) -> None:
+        data = {
+            "grant_type": "client_credentials",
+            "client_id": self._client_id,
+            "client_secret": self._client_secret,
+        }
+        if self._scope:
+            data["scope"] = self._scope
+        response = requests.post(self._token_url, data=data)
+        response.raise_for_status()
+        payload = response.json()
+        self._access_token = payload["access_token"]
+        self._expires_at = time.monotonic() + payload.get("expires_in", 0)
 
 
 class CookieAuthentication(BaseAuthenticationMethod):

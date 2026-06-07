@@ -313,6 +313,25 @@ client = ClientImplementation(
 )
 ```
 
+### `OAuthAuthentication`
+This authentication method implements the OAuth2 client-credentials grant. It
+exchanges a client id and secret for a bearer token at the token endpoint and
+sends it as an authorization header, fetching a fresh token automatically when
+the current one is missing or close to expiry (`expiry_margin` seconds).
+
+```python
+client = ClientImplementation(
+    authentication_method=OAuthAuthentication(
+        token_url="https://example.com/oauth/token",
+        client_id="your-client-id",
+        client_secret="your-client-secret",
+        scope="read write",  # optional
+    ),
+    response_handler=...,
+    request_formatter=...,
+)
+```
+
 ## Response Handlers
 
 Response handlers provide a standard way of handling the final response
