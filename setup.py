@@ -31,6 +31,7 @@ setuptools.setup(
     url="https://github.com/MikeWooster/api-client",
     python_requires=">=3.10",
     packages=["apiclient"],
+    package_data={"apiclient": ["py.typed"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 3.10",
@@ -41,6 +42,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
+        "Typing :: Typed",
     ],
     install_requires=application_dependencies,
     extras_require={
