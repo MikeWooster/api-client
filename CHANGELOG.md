@@ -13,11 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Minimum supported Python is now 3.10.
+- Type hints modernised to use PEP 604 unions (`X | None`) and built-in generics.
 - `clone()` preserves attributes set in subclass constructors (#73).
 - `@endpoint` includes inherited attributes and ignores methods and functions (#68).
 
 ### Removed
 - Support for Python 3.6, 3.7, 3.8 and 3.9.
+- The `OptionalDict`, `OptionalStr`, `OptionalInt` and `OptionalJsonType` aliases from `apiclient.utils.typing` (use `X | None` directly).
 
 ### Fixed
 - Unrelated exceptions are no longer masked as `UnexpectedError`; only request errors are wrapped (#80).
