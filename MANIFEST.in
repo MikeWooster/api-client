@@ -1,5 +1,6 @@
 recursive-include apiclient *
 include VERSION
+global-include *.typed
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
