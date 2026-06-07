@@ -1,14 +1,5 @@
 [![Unit Tests](https://github.com/MikeWooster/api-client/actions/workflows/test.yml/badge.svg)](https://github.com/MikeWooster/api-client/actions/workflows/test.yml)
 
-# Note to users of this API
-
-To those that have been paying attention to the commit history will note that
-I have had no time to actively maintain this library.  If there are any volunteers
-to continue the development of this library, I would be happy to add you as
-contributors.  Please get in touch, and I will try to sort out a group to continue
-this development.  Also note, that my reply time may not be that timely, so please
-be patient.
-
 # Python API Client
 
 A client for communicating with an api should be a clean abstraction
@@ -38,6 +29,16 @@ that code away from the clean abstraction you have designed.
 ```bash
 pip install api-client
 ```
+
+The distribution is `api-client`, but the import package is `apiclient`:
+
+```python
+from apiclient import APIClient
+```
+
+> **Note:** this package imports as `apiclient` and conflicts with any other installed
+> library that uses the same import name (such as `google-api-python-client`). See
+> [#88](https://github.com/MikeWooster/api-client/issues/88).
 
 ## Usage
 
